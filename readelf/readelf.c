@@ -71,7 +71,7 @@ int readelf(u_char *binary, int size)
         // hint: section number starts at 0.
         for (Nr = 0; Nr < sh_entry_count; Nr++) {
                 shdr = (Elf32_Shdr *)(ptr_sh_table + Nr * sh_entry_size);
-                printf("%d: 0x%x\n", Nr, shdr->sh_addr);
+                printf("%d:0x%x\n", Nr, shdr->sh_addr);
         }
 
         return 0;
