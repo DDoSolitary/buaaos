@@ -1,2 +1,3 @@
 *.o
 /gxemul/vmlinux
+/readelf/readelf
