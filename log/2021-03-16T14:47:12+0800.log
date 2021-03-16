@@ -1,0 +1,22 @@
+Autotest: Begin at 2021年 03月 16日 星期二 14:47:12 CST
+[35m[ Task 1 test begin. ][0m
+gcc -o programA programA.c
+[32m[ Make programA successfully! ][0m
+rm -f programA
+[32m[ Make clean delete programA successfully. ][0m
+[35m[ Task 1 test completed! ][0m
+[33m[01m[ You now got 20 point(s) ][0m
+[35m[ Task 2 test begin ][0m
+[32m[ You have passed Task 2 testcase 1/4, great! :) ][0m
+[32m[ You have passed Task 2 testcase 2/4, great! :) ][0m
+[32m[ You have passed Task 2 testcase 3/4, great! :) ][0m
+[32m[ You have passed Task 2 testcase 4/4, great! :) ][0m
+[35m[ Task 2 test completed. ][0m
+[33m[01m[ You now got 60 point(s) ][0m
+[35m[ Task 3 test begin ][0m
+bash: test_dir/dir3/dir31/output: Read-only file system
+diff: /home/git/ostest/target/19373392/lab0-Extra-2021-03-16T14:47:12+0800-MN6qH/ext_examB/output: 没有那个文件或目录
+[31m[01m[ Answer incorrect! You have failed Task 3. ][0m
+[35m[ Task 3 test completed. ][0m
+[33m[01m[ You now got 60 point(s) ][0m
+[33m[01m[ You got 60 (of 100) this time. 2021年 03月 16日 星期二 14:47:28 CST ][0m
