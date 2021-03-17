@@ -19,6 +19,7 @@
 extern int PrintChar(char *, char, int, int);
 extern int PrintString(char *, char *, int, int);
 extern int PrintNum(char *, unsigned long, int, int, int, int, char, int);
+extern int ScanNum(char *, int *);
 
 /* private variable */
 static const char theFatalMsg[] = "fatal error in lp_Print!";
@@ -69,19 +70,55 @@ lp_Print(void (*output)(void *, char *, int),
 	{ 
 	    /* scan for the next '%' */
 	    /* flush the string found so far */
+	    length = 0;
+	    while (fmt[length] && fmt[length] != '%') {
+		length++;
+	    }
+	    OUTPUT(arg, fmt, length);
+	    fmt += length;
 
 	    /* check "are we hitting the end?" */
+	    if (!*fmt) break;
 	}
 
 	
 	/* we found a '%' */
-	
-	/* check for long */
-
-	/* check for other prefixes */
-
-	/* check format flag */
-	
+	ladjust = 0;
+	padc = ' ';
+	for (fmt++;; fmt++) {
+	    if (*fmt == '-') {
+		ladjust = 1;
+	    } else if (*fmt == '0') {
+		padc = '0';
+	    } else {
+		break;
+	    }
+	}
+	if (IsDigit(*fmt) || *fmt == '-') {
+	    fmt += ScanNum(fmt, &width);
+	    if (width < 0) {
+		width = -width;
+		ladjust = 1;
+	    }
+	} else {
+	    width = 0;
+	}
+	if (*fmt == '.') {
+	    fmt++;
+	    if (IsDigit(*fmt) || *fmt == '-') {
+		fmt += ScanNum(fmt, &prec);
+	    } else {
+		prec = 0;
+	    }
+	} else {
+	    prec = -1;
+	}
+	if (*fmt == 'l') {
+	    fmt++;
+	    longFlag = 1;
+	} else {
+	    longFlag = 0;
+	}
 
 	negFlag = 0;
 	switch (*fmt) {
@@ -108,7 +145,12 @@ lp_Print(void (*output)(void *, char *, int),
 			Refer to other part (case 'b',case 'o' etc.) and func PrintNum to complete this part.
 			Think the difference between case 'd' and others. (hint: negFlag).
 		*/
-	    
+	    if (num < 0) {
+		num = -num;
+		negFlag = 1;
+	    }
+	    length = PrintNum(buf, num, 10, 0, width, ladjust, padc, 0);
+	    OUTPUT(arg, buf, length);
 		break;
 
 	 case 'o':
@@ -289,4 +331,23 @@ PrintNum(char * buf, unsigned long u, int base, int negFlag,
 
     /* adjust the string pointer */
     return length;
+}
+
+int
+ScanNum(char *s, int *num)
+{
+    int off;
+    int neg;
+
+    if (*s == '-') {
+	s++;
+	neg = 1;
+    } else {
+	neg = 0;
+    }
+    *num = 0;
+    for (off = 0; IsDigit(s[off]); off++) {
+	*num = *num * 10 + Ctod(s[off]);
+    }
+    return neg ? -off : off;
 }
