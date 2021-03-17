@@ -340,7 +340,7 @@ ScanNum(char *s, int *num)
     int neg;
 
     if (*s == '-') {
-	s++;
+	off++;
 	neg = 1;
     } else {
 	neg = 0;
