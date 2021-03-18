@@ -6,6 +6,55 @@
 
 #include "kerelf.h"
 #include <stdio.h>
+
+#define EI_DATA         5
+#define ELFDATANONE     0
+#define ELFDATALSB      1
+#define ELFDATAMSB      2
+
+char check_host_endian()
+{
+        int x = 1;
+        if (*(char *)&x == 1) {
+                return ELFDATALSB;
+        } else {
+                return ELFDATAMSB;
+        }
+}
+
+uint16_t fix_u16_dummy(uint16_t x)
+{
+        return x;
+}
+
+uint16_t fix_u16_swap(uint16_t x)
+{
+        char *buf = (char *)&x;
+        char t;
+        t = buf[0];
+        buf[0] = buf[1];
+        buf[1] = t;
+        return x;
+}
+
+uint32_t fix_u32_dummy(uint32_t x)
+{
+        return x;
+}
+
+uint32_t fix_u32_swap(uint32_t x)
+{
+        char *buf = (char *)&x;
+        char t;
+        t = buf[0];
+        buf[0] = buf[3];
+        buf[3] = t;
+        t = buf[1];
+        buf[1] = buf[2];
+        buf[2] = t;
+        return x;
+}
+
 /* Overview:
  *   Check whether it is a ELF file.
  *
@@ -55,6 +104,10 @@ int readelf(u_char *binary, int size)
         Elf32_Half sh_entry_count;
         Elf32_Half sh_entry_size;
 
+        char bin_endian;
+        char host_endian;
+        uint16_t (*fix_u16)(uint16_t);
+        uint32_t (*fix_u32)(uint32_t);
 
         // check whether `binary` is a ELF file.
         if (size < 4 || !is_elf_format(binary)) {
@@ -62,16 +115,26 @@ int readelf(u_char *binary, int size)
                 return 0;
         }
 
+        bin_endian = ehdr->e_ident[EI_DATA];
+        host_endian = check_host_endian();
+        if (bin_endian == ELFDATANONE || bin_endian == host_endian) {
+                fix_u16 = fix_u16_dummy;
+                fix_u32 = fix_u32_dummy;
+        } else {
+                fix_u16 = fix_u16_swap;
+                fix_u32 = fix_u32_swap;
+        }
+
         // get section table addr, section header number and section header size.
-        ptr_sh_table = binary + ehdr->e_shoff;
-        sh_entry_count = ehdr->e_shnum;
-        sh_entry_size = ehdr->e_shentsize;
+        ptr_sh_table = binary + fix_u32(ehdr->e_shoff);
+        sh_entry_count = fix_u16(ehdr->e_shnum);
+        sh_entry_size = fix_u16(ehdr->e_shentsize);
 
         // for each section header, output section number and section addr. 
         // hint: section number starts at 0.
         for (Nr = 0; Nr < sh_entry_count; Nr++) {
                 shdr = (Elf32_Shdr *)(ptr_sh_table + Nr * sh_entry_size);
-                printf("%d:0x%x\n", Nr, shdr->sh_addr);
+                printf("%d:0x%x\n", Nr, fix_u32(shdr->sh_addr));
         }
 
         return 0;
