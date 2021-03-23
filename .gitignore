@@ -1,4 +1,0 @@
-*.o
-/gxemul/vmlinux
-/readelf/readelf
-/lib/test/test
