@@ -98,11 +98,11 @@ int readelf(u_char *binary, int size)
 
         int Nr;
 
-        Elf32_Shdr *shdr = NULL;
+        Elf32_Phdr *phdr = NULL;
 
-        u_char *ptr_sh_table = NULL;
-        Elf32_Half sh_entry_count;
-        Elf32_Half sh_entry_size;
+        u_char *ptr_ph_table = NULL;
+        Elf32_Half ph_entry_count;
+        Elf32_Half ph_entry_size;
 
         char bin_endian;
         char host_endian;
@@ -126,15 +126,15 @@ int readelf(u_char *binary, int size)
         }
 
         // get section table addr, section header number and section header size.
-        ptr_sh_table = binary + fix_u32(ehdr->e_shoff);
-        sh_entry_count = fix_u16(ehdr->e_shnum);
-        sh_entry_size = fix_u16(ehdr->e_shentsize);
+        ptr_ph_table = binary + fix_u32(ehdr->e_phoff);
+        ph_entry_count = fix_u16(ehdr->e_phnum);
+        ph_entry_size = fix_u16(ehdr->e_phentsize);
 
         // for each section header, output section number and section addr. 
         // hint: section number starts at 0.
-        for (Nr = 0; Nr < sh_entry_count; Nr++) {
-                shdr = (Elf32_Shdr *)(ptr_sh_table + Nr * sh_entry_size);
-                printf("%d:0x%x\n", Nr, fix_u32(shdr->sh_addr));
+        for (Nr = 0; Nr < ph_entry_count; Nr++) {
+                phdr = (Elf32_Phdr *)(ptr_ph_table + Nr * ph_entry_size);
+                printf("%d:0x%x,0x%x\n", Nr, fix_u32(phdr->p_offset), fix_u32(phdr->p_align));
         }
 
         return 0;
