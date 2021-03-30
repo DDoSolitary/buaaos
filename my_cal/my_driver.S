@@ -19,7 +19,7 @@ LEAF(_my_getchar)
 	beqz v0, L0
 	nop
 	sb v0, 0xb0000000
-	beq v0, 13, L1
+	bne v0, 13, L1
 	nop
 	li t0, 10
 	sb t0, 0xb0000000
@@ -31,7 +31,7 @@ END(_my_getchar)
 LEAF(_my_exit)
 	.set mips2
 	.set reorder
-	sb zero, 0xb0000001
+	sb zero, 0xb0000010
 	j ra
 	nop
 END(_my_exit)
