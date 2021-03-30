@@ -15,6 +15,18 @@
 #define		IsDigit(x)	( ((x) >= '0') && ((x) <= '9') )
 #define		Ctod(x)		( (x) - '0')
 
+struct s1 {
+    int a;
+    char b;
+    char c;
+    int d;
+};
+
+struct s2 {
+    int size;
+    int c[1];
+};
+
 /* forward declaration */
 extern int PrintChar(char *, char, int, int);
 extern int PrintString(char *, char *, int, int);
@@ -47,6 +59,8 @@ lp_Print(void (*output)(void *, char *, int),
     char c;
     char *s;
     long int num;
+    struct s1 *ps1;
+    struct s2 *ps2;
 
 	
 
@@ -56,8 +70,10 @@ lp_Print(void (*output)(void *, char *, int),
     int prec;
     int ladjust;
     char padc;
+    int typeid;
 
     int length;
+    int i;
 
     /*
         Exercise 1.5. Please fill in two parts in this file.
@@ -118,6 +134,13 @@ lp_Print(void (*output)(void *, char *, int),
 	    longFlag = 1;
 	} else {
 	    longFlag = 0;
+	}
+	if (*fmt == '$') {
+	    fmt++;
+	    typeid = Ctod(*fmt);
+	    fmt++;
+	} else {
+	    typeid = 0;
 	}
 
 	negFlag = 0;
@@ -205,6 +228,55 @@ lp_Print(void (*output)(void *, char *, int),
 	    s = (char*)va_arg(ap, char *);
 	    length = PrintString(buf, s, width, ladjust);
 	    OUTPUT(arg, buf, length);
+	    break;
+
+	 case 'T':
+	    if (typeid == 1) {
+		ps1 = (struct s1 *)va_arg(ap, struct s1 *);
+		OUTPUT(arg, "{", 1);
+		num = ps1->a;
+		if (num < 0) {
+		    num = -num;
+		    negFlag = 1;
+		}
+		length = PrintNum(buf, num, 10, negFlag, width, ladjust, padc, 0);
+		OUTPUT(arg, buf, length);
+		OUTPUT(arg, ",", 1);
+		length = PrintChar(buf, ps1->b, width, ladjust);
+		OUTPUT(arg, buf, length);
+		OUTPUT(arg, ",", 1);
+		length = PrintChar(buf, ps1->c, width, ladjust);
+		OUTPUT(arg, buf, length);
+		OUTPUT(arg, ",", 1);
+		num = ps1->d;
+		if (num < 0) {
+		    num = -num;
+		    negFlag = 1;
+		} else {
+		    negFlag = 0;
+		}
+		length = PrintNum(buf, num, 10, negFlag, width, ladjust, padc, 0);
+		OUTPUT(arg, buf, length);
+		OUTPUT(arg, "}", 1);
+	    } else if (typeid == 2) {
+		ps2 = (struct s2 *)va_arg(ap, struct s2 *);
+		OUTPUT(arg, "{", 1);
+		for (i = 0; i < ps2->size; i++) {
+		    num = ps2->c[i];
+		    if (num < 0) {
+			num = -num;
+			negFlag = 1;
+		    } else {
+			negFlag = 0;
+		    }
+		    length = PrintNum(buf, num, 10, negFlag, width, ladjust, padc, 0);
+		    OUTPUT(arg, buf, length);
+		    if (i < ps2->size - 1) {
+			OUTPUT(arg, ",", 1);
+		    }
+		}
+		OUTPUT(arg, "}", 1);
+	    }
 	    break;
 
 	 case '\0':
