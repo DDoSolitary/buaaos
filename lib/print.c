@@ -259,7 +259,10 @@ lp_Print(void (*output)(void *, char *, int),
 	    } else if (typeid == 2) {
 		ps2 = (struct s2 *)va_arg(ap, struct s2 *);
 		OUTPUT(arg, "{", 1);
+		length = PrintNum(buf, ps2->size, 10, 0, width, ladjust, padc, 0);
+		OUTPUT(arg, buf, length);
 		for (i = 0; i < ps2->size; i++) {
+		    OUTPUT(arg, ",", 1);
 		    num = ps2->c[i];
 		    if (num < 0) {
 			num = -num;
@@ -269,9 +272,6 @@ lp_Print(void (*output)(void *, char *, int),
 		    }
 		    length = PrintNum(buf, num, 10, negFlag, width, ladjust, padc, 0);
 		    OUTPUT(arg, buf, length);
-		    if (i < ps2->size - 1) {
-			OUTPUT(arg, ",", 1);
-		    }
 		}
 		OUTPUT(arg, "}", 1);
 	    }
