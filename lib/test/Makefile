@@ -6,10 +6,10 @@ INCLUDES := -I../../include/
 all: test
 
 print.o: ../print.c
-	$(CC) $(INCLUDES) -o $@ -c $^
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $^
 
 test.o: test.c
-	$(CC) $(INCLUDES) -o $@ -c $^
+	$(CC) $(CFLAGS) $(INCLUDES) -o $@ -c $^
 
 test: print.o test.o
 	$(CC) -o $@ $^
