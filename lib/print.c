@@ -336,7 +336,7 @@ PrintNum(char * buf, unsigned long u, int base, int negFlag,
 int
 ScanNum(char *s, int *num)
 {
-    int off;
+    int off = 0;
     int neg;
 
     if (*s == '-') {
@@ -346,7 +346,7 @@ ScanNum(char *s, int *num)
 	neg = 0;
     }
     *num = 0;
-    for (off = 0; IsDigit(s[off]); off++) {
+    for (; IsDigit(s[off]); off++) {
 	*num = *num * 10 + Ctod(s[off]);
     }
     return neg ? -off : off;
