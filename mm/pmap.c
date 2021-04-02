@@ -175,18 +175,27 @@ void mips_vm_init()
 void
 page_init(void)
 {
+    int nused;
+    int i;
+
     /* Step 1: Initialize page_free_list. */
     /* Hint: Use macro `LIST_INIT` defined in include/queue.h. */
-
+    LIST_INIT(&page_free_list);
 
     /* Step 2: Align `freemem` up to multiple of BY2PG. */
-
+    freemem = ROUND(freemem, BY2PG);
 
     /* Step 3: Mark all memory blow `freemem` as used(set `pp_ref`
      * filed to 1) */
-
+    nused = PADDR(freemem) / BY2PG;
+    for (i = 0; i < nused; i++) {
+	pages[i].pp_ref = 1;
+    }
 
     /* Step 4: Mark the other memory as free. */
+    for (; i < npage; i++) {
+	LIST_INSERT_HEAD(&page_free_list, pages + i, pp_link);
+    }
 }
 
 /*Overview:
