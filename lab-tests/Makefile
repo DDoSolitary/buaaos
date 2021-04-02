@@ -1,4 +1,4 @@
-MODULES := lab1-tests
+MODULES := lab1-tests lab2-tests
 
 .PHONY: all $(MODULES) clean test
 
