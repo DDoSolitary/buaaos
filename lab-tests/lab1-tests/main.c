@@ -5,6 +5,7 @@
 
 char output_buf[65536];
 int output_len;
+int rc;
 
 void output(void *arg, char *s, int len) {
     strncpy(output_buf + output_len, s, len);
@@ -20,9 +21,11 @@ void test_print(char *expected, char *fmt, ...) {
     output_buf[output_len] = 0;
     if (strcmp(output_buf, expected)) {
 	printf("test failed!\nexpected: %s\nfound: %s\n\n", expected, output_buf);
+	rc = 1;
     }
 }
 
 int main() {
     test_print("foo 123", "%s %d", "foo", 123);
+    return rc;
 }
