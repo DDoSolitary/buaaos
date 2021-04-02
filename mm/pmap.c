@@ -187,7 +187,7 @@ page_init(void)
 
     /* Step 3: Mark all memory blow `freemem` as used(set `pp_ref`
      * filed to 1) */
-    nused = PADDR(freemem) / BY2PG;
+    nused = PPN(PADDR(freemem));
     for (i = 0; i < nused; i++) {
 	pages[i].pp_ref = 1;
     }
@@ -218,12 +218,16 @@ page_alloc(struct Page **pp)
     struct Page *ppage_temp;
 
     /* Step 1: Get a page from free memory. If fails, return the error code.*/
-
+    if ((ppage_temp = LIST_FIRST(&page_free_list)) == NULL) {
+	return -E_NO_MEM;
+    }
+    LIST_REMOVE(ppage_temp, pp_link);
 
     /* Step 2: Initialize this page.
      * Hint: use `bzero`. */
-
-
+    bzero((void *)page2kva(ppage_temp), BY2PG);
+    *pp = ppage_temp;
+    return 0;
 }
 
 /*Overview:
@@ -234,10 +238,15 @@ void
 page_free(struct Page *pp)
 {
     /* Step 1: If there's still virtual address refers to this page, do nothing. */
-
+    if (pp->pp_ref > 0) {
+	return;
+    }
 
     /* Step 2: If the `pp_ref` reaches to 0, mark this page as free and return. */
-
+    if (pp->pp_ref == 0) {
+	LIST_INSERT_HEAD(&page_free_list, pp, pp_link);
+	return;
+    }
 
     /* If the value of `pp_ref` less than 0, some error must occurred before,
      * so PANIC !!! */
