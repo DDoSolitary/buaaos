@@ -148,7 +148,7 @@
                 if (LIST_EMPTY((head))) { \
                         LIST_FIRST((head)) = (elm); \
                         LIST_NEXT((elm), field) = NULL; \
-                        (elm)->field.le_prev = NULL; \
+                        (elm)->field.le_prev = &LIST_FIRST((head)); \
                         break; \
                 } \
                 (elm)->field.le_prev = &LIST_NEXT(LIST_FIRST((head)), field); \
