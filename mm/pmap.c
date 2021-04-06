@@ -233,6 +233,14 @@ page_alloc(struct Page **pp)
     return 0;
 }
 
+int page_alloc2(struct Page **pp) {
+    int rc = page_alloc(pp);
+    if (rc >= 0) {
+	printf("page number is %x, start from pa %x\n", page2ppn(*pp), page2pa(*pp));
+    }
+    return rc;
+}
+
 /*Overview:
 	Release a page, mark it as free if it's `pp_ref` reaches 0.
   Hint:
@@ -660,3 +668,20 @@ void pageout(int va, int context)
     printf("pageout:\t@@@___0x%x___@@@  ins a page \n", va);
 }
 
+void get_page_status(int pa) {
+    static int cnt = 0;
+    struct Page *page = pa2page(pa), *temp_page;
+    int status;
+    if (page->pp_ref > 0) {
+	status = 1;
+    } else {
+	status = 2;
+	LIST_FOREACH(temp_page, &page_free_list, pp_link) {
+	    if (temp_page == page) {
+		status = 3;
+		break;
+	    }
+	}
+    }
+    printf("times:%d, page status:%d\n", ++cnt, status);
+}
