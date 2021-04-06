@@ -18,6 +18,9 @@ static u_long freemem;
 
 static struct Page_list page_free_list;	/* Free list of physical pages */
 
+#define PBM_SIZE 512
+unsigned int page_bitmap[PBM_SIZE];
+
 
 /* Overview:
  	Initialize basemem and npage.
@@ -169,6 +172,16 @@ void mips_vm_init()
     printf("pmap.c:\t mips vm init success\n");
 }
 
+void set_pbm(int ppn, int val) {
+    unsigned int *bits = &page_bitmap[ppn / 32];
+    int bit_offset = ppn % 32;
+    *bits = (*bits & ~(1 << bit_offset)) | (val << bit_offset);
+}
+
+int get_pbm(int ppn) {
+    return (page_bitmap[ppn / 32] & (1 << (ppn % 32))) > 0;
+}
+
 /*Overview:
  	Initialize page structure and memory free list.
  	The `pages` array has one `struct Page` entry per physical page. Pages
@@ -197,7 +210,7 @@ page_init(void)
 
     /* Step 4: Mark the other memory as free. */
     for (; i < npage; i++) {
-	LIST_INSERT_HEAD(&page_free_list, pages + i, pp_link);
+	set_pbm(i, 1);
     }
 }
 
@@ -218,13 +231,19 @@ page_init(void)
 int
 page_alloc(struct Page **pp)
 {
-    struct Page *ppage_temp;
+    struct Page *ppage_temp = NULL;
+    int i;
 
     /* Step 1: Get a page from free memory. If fails, return the error code.*/
-    if ((ppage_temp = LIST_FIRST(&page_free_list)) == NULL) {
+    for (i = 0; i < npage; i++) {
+	if (!get_pbm(i)) {
+	    ppage_temp = &pages[i];
+	    set_pbm(i, 1);
+	}
+    }
+    if (ppage_temp == NULL) {
 	return -E_NO_MEM;
     }
-    LIST_REMOVE(ppage_temp, pp_link);
 
     /* Step 2: Initialize this page.
      * Hint: use `bzero`. */
@@ -247,7 +266,7 @@ page_free(struct Page *pp)
 
     /* Step 2: If the `pp_ref` reaches to 0, mark this page as free and return. */
     if (pp->pp_ref == 0) {
-	LIST_INSERT_HEAD(&page_free_list, pp, pp_link);
+	set_pbm(page2ppn(pp), 0);
 	return;
     }
 
