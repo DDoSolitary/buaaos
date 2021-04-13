@@ -660,3 +660,22 @@ void pageout(int va, int context)
     printf("pageout:\t@@@___0x%x___@@@  ins a page \n", va);
 }
 
+int count_page(Pde *pgdir, int *cnt) {
+    int i, j;
+    Pde pde;
+    Pte *pt, pte;
+    for (i = 0; i < npage; i++) {
+	cnt[i] = 0;
+    }
+    for (i = 0; i < PTE2PT; i++) {
+	pde = pgdir[i];
+	if ((pde & PTE_V) != PTE_V) continue;
+	pt = (Pte *)KADDR(PTE_ADDR(pde));
+	for (j = 0; j < PTE2PT; j++) {
+	    pte = pt[j];
+	    if ((pte & PTE_V) != PTE_V) continue;
+	    cnt[PPN(PTE_ADDR(pte))]++;
+	}
+    }
+    return npage;
+}
