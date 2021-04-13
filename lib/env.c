@@ -227,16 +227,37 @@ static int load_icode_mapper(u_long va, u_int32_t sgsize,
     u_long i;
     int r;
     u_long offset = va - ROUNDDOWN(va, BY2PG);
+    u_long start_offset, end_offset;
 
-    /*Step 1: load all content of bin into memory. */
-    for (i = 0; i < bin_size; i += BY2PG) {
-        /* Hint: You should alloc a new page. */
+    va -= offset;
+
+    for (i = 0; i < bin_size + offset; i += BY2PG) {
+        if ((r = page_alloc(&p)) < 0) {
+            return r;
+        }
+        if ((r = page_insert(env->env_pgdir, p, va + i, PTE_R)) < 0) {
+            return r;
+        }
+        if (i == 0 && offset > 0) {
+            start_offset = offset;
+        } else {
+            start_offset = 0;
+        }
+        end_offset = MIN(BY2PG, bin_size + offset - i);
+        bcopy(
+            bin + i - offset + start_offset,
+            (void *)page2kva(p) + start_offset,
+            end_offset - start_offset);
     }
     /*Step 2: alloc pages to reach `sgsize` when `bin_size` < `sgsize`.
     * hint: variable `i` has the value of `bin_size` now! */
-    while (i < sgsize) {
-
-
+    for (; i < sgsize + offset; i += BY2PG) {
+        if ((r = page_alloc(&p)) < 0) {
+            return r;
+        }
+        if ((r = page_insert(env->env_pgdir, p, va + i, PTE_R)) < 0) {
+            return r;
+        }
     }
     return 0;
 }
@@ -265,19 +286,18 @@ load_icode(struct Env *e, u_char *binary, u_int size)
     struct Page *p = NULL;
     u_long entry_point;
     u_long r;
-    u_long perm;
 
-    /*Step 1: alloc a page. */
+    if ((r = page_alloc(&p)) < 0) {
+        panic("load_icode: could not allocate the stack: %d\n", r);
+    }
+    if ((r = page_insert(e->env_pgdir, p, USTACKTOP - BY2PG, PTE_R)) < 0) {
+        panic("load_icode: could not map the stack page: %d\n", r);
+    }
 
+    if ((r = load_elf(binary, size, &entry_point, e, &load_icode_mapper)) < 0) {
+        panic("load_icode: could not load elf segments: %d\n", r);
+    }
 
-    /*Step 2: Use appropriate perm to set initial stack for new Env. */
-    /*Hint: Should the user-stack be writable? */
-
-
-    /*Step 3:load the binary using elf loader. */
-
-
-    /*Step 4:Set CPU's PC register as appropriate value. */
     e->env_tf.pc = entry_point;
 }
 
