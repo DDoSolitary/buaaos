@@ -314,14 +314,20 @@ load_icode(struct Env *e, u_char *binary, u_int size)
 void
 env_create_priority(u_char *binary, int size, int priority)
 {
-        struct Env *e;
+    struct Env *e;
+    int r;
+
     /*Step 1: Use env_alloc to alloc a new env. */
+    if ((r = env_alloc(&e, 0)) < 0) {
+        panic("env_create_priority: could not allocate new env: %d\n", r);
+    }
 
     /*Step 2: assign priority to the new env. */
+    e->env_pri = priority;
 
     /*Step 3: Use load_icode() to load the named elf binary,
       and insert it into env_sched_list using LIST_INSERT_HEAD. */
-
+    load_icode(e, binary, size);
 }
 /* Overview:
  * Allocates a new env with default priority value.
@@ -334,7 +340,7 @@ void
 env_create(u_char *binary, int size)
 {
      /*Step 1: Use env_create_priority to alloc a new env with priority 1 */
-
+    env_create_priority(binary, size, 1);
 }
 
 /* Overview:
