@@ -660,3 +660,17 @@ void pageout(int va, int context)
     printf("pageout:\t@@@___0x%x___@@@  ins a page \n", va);
 }
 
+u_long cal_page(int func, u_long va, int n, Pde *pgdir) {
+    switch (func) {
+    case 0:
+	return 0;
+    case 1:
+	return (u_long)((Pte *)va + VPN(va));
+    case 2:
+	return 0;
+    case 3:
+	return 0;
+    default:
+	return 0;
+    }
+}
