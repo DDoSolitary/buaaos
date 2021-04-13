@@ -425,14 +425,13 @@ extern void lcontext(u_int contxt);
 void
 env_run(struct Env *e)
 {
-    struct Trapframe *old;
-
     /*Step 1: save register state of curenv. */
     /* Hint: if there is an environment running, you should do
     *  switch the context and save the registers. You can imitate env_destroy() 's behaviors.*/
-    old = (struct Trapframe *)(TIMESTACK - sizeof(struct Trapframe));
-    curenv->env_tf = *old;
-    curenv->env_tf.pc = curenv->env_tf.cp0_epc;
+    if (curenv != NULL) {
+        curenv->env_tf = *(struct Trapframe *)(TIMESTACK - sizeof(struct Trapframe));
+        curenv->env_tf.pc = curenv->env_tf.cp0_epc;
+    }
 
     /*Step 2: Set 'curenv' to the new environment. */
     curenv = e;

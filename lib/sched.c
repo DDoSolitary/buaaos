@@ -30,12 +30,14 @@ void sched_yield(void)
      *  functions or macros below may be used (not all):
      *  LIST_INSERT_TAIL, LIST_REMOVE, LIST_FIRST, LIST_EMPTY
      */
-    if (count == 0) {
-        LIST_REMOVE(curenv, env_sched_link);
-        LIST_INSERT_TAIL(&env_sched_list[1 - point], curenv, env_sched_link);
-    } else {
-        count--;
-        env_run(curenv);
+    if (curenv != NULL) {
+        if (count == 0) {
+            LIST_REMOVE(curenv, env_sched_link);
+            LIST_INSERT_TAIL(&env_sched_list[1 - point], curenv, env_sched_link);
+        } else {
+            count--;
+            env_run(curenv);
+        }
     }
     if (LIST_EMPTY(&env_sched_list[point])) {
         point = 1 - point;
