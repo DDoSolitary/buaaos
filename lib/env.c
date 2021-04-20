@@ -580,26 +580,34 @@ int lab3_get_sum(u_int env_id) {
     return real_get_sum(e);
 }
 
+static struct Env *find_root(struct Env *e) {
+    if (e->env_parent_id == 0) {
+        return e;
+    }
+    envid2env(e->env_parent_id, &e, 0);
+    return find_root(e);
+}
+
 void lab3_kill(u_int env_id) {
-    struct Env *e, *parent, *child, *next;
+    struct Env *e, *root, *child, *next;
 
     envid2env(env_id, &e, 0);
-    envid2env(e->env_parent_id, &parent, 0);
+    root = find_root(e);
     if (e->exam_prev_brother != NULL) {
         e->exam_prev_brother->exam_next_brother = e->exam_next_brother;
     }
     if (e->exam_next_brother != NULL) {
         e->exam_next_brother->exam_prev_brother = e->exam_prev_brother;
     }
-    if (parent->exam_first_child == e) {
-        parent->exam_first_child = e->exam_next_brother;
+    if (root->exam_first_child == e) {
+        root->exam_first_child = e->exam_next_brother;
     }
-    if (parent->exam_last_child == e) {
-        parent->exam_last_child = e->exam_prev_brother;
+    if (root->exam_last_child == e) {
+        root->exam_last_child = e->exam_prev_brother;
     }
     for (child = e->exam_first_child; child != NULL; child = next) {
         next = child->exam_next_brother;
-        append_env_child(parent, child);
+        append_env_child(root, child);
     }
 
     bzero(e, sizeof(struct Env));
