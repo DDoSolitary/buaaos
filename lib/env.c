@@ -555,6 +555,7 @@ void lab3_output(u_int env_id) {
     struct Env *e;
     u_int first_child_id, prev_brother_id, next_brother_id;
 
+    envid2env(env_id, &e, 0);
     first_child_id = e->exam_first_child == NULL ? 0 : e->exam_first_child->env_id;
     prev_brother_id = e->exam_prev_brother == NULL ? 0 : e->exam_prev_brother->env_id;
     next_brother_id = e->exam_next_brother == NULL ? 0 : e->exam_next_brother->env_id;
