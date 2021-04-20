@@ -514,3 +514,21 @@ void env_check()
         printf("pe2`s sp register %x\n",pe2->env_tf.regs[29]);
         printf("env_check() succeeded!\n");
 }
+
+u_int fork(struct Env *e) {
+    struct Env *child;
+
+    if ((child = LIST_FIRST(&env_free_list)) == NULL) {
+        panic("fork: could not alloc new env");
+    }
+
+    child->env_status = e->env_status;
+    child->env_pgdir = e->env_pgdir;
+    child->env_cr3 = e->env_cr3;
+    child->env_pri = e->env_pri;
+
+    child->env_id = mkenvid(child);
+    child->env_parent_id = e->env_id;
+
+    return child->env_id;
+}
