@@ -194,6 +194,10 @@ env_alloc(struct Env **new, u_int parent_id)
     e->env_tf.regs[29] = USTACKTOP;
     e->env_tf.cp0_status = 0x10001004;
 
+    e->exam_first_child = NULL;
+    e->exam_last_child = NULL;
+    e->exam_prev_brother = NULL;
+    e->exam_next_brother = NULL;
 
     /*Step 5: Remove the new Env from env_free_list. */
     LIST_REMOVE(e, env_link);
@@ -530,5 +534,29 @@ u_int fork(struct Env *e) {
     child->env_id = mkenvid(child);
     child->env_parent_id = e->env_id;
 
+    child->exam_first_child = NULL;
+    child->exam_last_child = NULL;
+    child->exam_prev_brother = e->exam_last_child;
+    child->exam_next_brother = NULL;
+
+    if (e->exam_last_child != NULL) {
+        e->exam_last_child->exam_next_brother = child;
+    }
+    e->exam_last_child = child;
+    if (e->exam_first_child == NULL) {
+        e->exam_first_child = child;
+    }
+
     return child->env_id;
+}
+
+void lab3_output(u_int env_id) {
+    struct Env *e;
+    u_int first_child_id, prev_brother_id, next_brother_id;
+
+    first_child_id = e->exam_first_child == NULL ? 0 : e->exam_first_child->env_id;
+    prev_brother_id = e->exam_prev_brother == NULL ? 0 : e->exam_prev_brother->env_id;
+    next_brother_id = e->exam_next_brother == NULL ? 0 : e->exam_next_brother->env_id;
+
+    printf("%08x %08x %08x %08x\n", e->env_parent_id, first_child_id, prev_brother_id, next_brother_id);
 }

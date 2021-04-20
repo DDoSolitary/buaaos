@@ -42,6 +42,11 @@ struct Env {
 	// Lab 6 scheduler counts
 	u_int env_runs;			// number of times been env_run'ed
 	u_int env_nop;                  // align to avoid mul instruction
+
+	struct Env *exam_first_child;
+	struct Env *exam_last_child;
+	struct Env *exam_prev_brother;
+	struct Env *exam_next_brother;
 };
 
 LIST_HEAD(Env_list, Env);
@@ -60,6 +65,7 @@ int envid2env(u_int envid, struct Env **penv, int checkperm);
 void env_run(struct Env *e);
 
 u_int fork(struct Env *e);
+void lab3_output(u_int env_id);
 
 // for the grading script
 #define ENV_CREATE2(x, y) \
