@@ -585,6 +585,18 @@ void lab3_kill(u_int env_id) {
 
     envid2env(env_id, &e, 0);
     envid2env(e->env_parent_id, &parent, 0);
+    if (e->exam_prev_brother != NULL) {
+        e->exam_prev_brother->exam_next_brother = e->exam_next_brother;
+    }
+    if (e->exam_next_brother != NULL) {
+        e->exam_next_brother->exam_prev_brother = e->exam_prev_brother;
+    }
+    if (parent->exam_first_child == e) {
+        parent->exam_first_child = e->exam_next_brother;
+    }
+    if (parent->exam_last_child == e) {
+        parent->exam_last_child = e->exam_prev_brother;
+    }
     for (child = e->exam_first_child; child != NULL; child = child->exam_next_brother) {
         append_env_child(parent, child);
     }
