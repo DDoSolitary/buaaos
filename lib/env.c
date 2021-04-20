@@ -581,7 +581,7 @@ int lab3_get_sum(u_int env_id) {
 }
 
 void lab3_kill(u_int env_id) {
-    struct Env *e, *parent, *child;
+    struct Env *e, *parent, *child, *next;
 
     envid2env(env_id, &e, 0);
     envid2env(e->env_parent_id, &parent, 0);
@@ -597,7 +597,8 @@ void lab3_kill(u_int env_id) {
     if (parent->exam_last_child == e) {
         parent->exam_last_child = e->exam_prev_brother;
     }
-    for (child = e->exam_first_child; child != NULL; child = child->exam_next_brother) {
+    for (child = e->exam_first_child; child != NULL; child = next) {
+        next = child->exam_next_brother;
         append_env_child(parent, child);
     }
 
