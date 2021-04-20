@@ -519,6 +519,19 @@ void env_check()
         printf("env_check() succeeded!\n");
 }
 
+static void append_env_child(struct Env *e, struct Env *child) {
+    child->env_parent_id = e->env_id;
+    child->exam_prev_brother = e->exam_last_child;
+    child->exam_next_brother = NULL;
+    if (e->exam_last_child != NULL) {
+        e->exam_last_child->exam_next_brother = child;
+    }
+    e->exam_last_child = child;
+    if (e->exam_first_child == NULL) {
+        e->exam_first_child = child;
+    }
+}
+
 u_int fork(struct Env *e) {
     struct Env *child;
 
@@ -533,20 +546,9 @@ u_int fork(struct Env *e) {
     child->env_pri = e->env_pri;
 
     child->env_id = mkenvid(child);
-    child->env_parent_id = e->env_id;
-
     child->exam_first_child = NULL;
     child->exam_last_child = NULL;
-    child->exam_prev_brother = e->exam_last_child;
-    child->exam_next_brother = NULL;
-
-    if (e->exam_last_child != NULL) {
-        e->exam_last_child->exam_next_brother = child;
-    }
-    e->exam_last_child = child;
-    if (e->exam_first_child == NULL) {
-        e->exam_first_child = child;
-    }
+    append_env_child(e, child);
 
     return child->env_id;
 }
@@ -576,4 +578,17 @@ int lab3_get_sum(u_int env_id) {
     struct Env *e;
     envid2env(env_id, &e, 0);
     return real_get_sum(e);
+}
+
+void lab3_kill(u_int env_id) {
+    struct Env *e, *parent, *child;
+
+    envid2env(env_id, &e, 0);
+    envid2env(e->env_parent_id, &parent, 0);
+    for (child = e->exam_first_child; child != NULL; child = child->exam_next_brother) {
+        append_env_child(parent, child);
+    }
+
+    e->env_status = ENV_FREE;
+    LIST_INSERT_HEAD(&env_free_list, e, env_link);
 }

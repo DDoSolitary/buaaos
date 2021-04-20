@@ -67,6 +67,7 @@ void env_run(struct Env *e);
 u_int fork(struct Env *e);
 void lab3_output(u_int env_id);
 int lab3_get_sum(u_int env_id);
+void lab3_kill(u_int env_id);
 
 // for the grading script
 #define ENV_CREATE2(x, y) \
