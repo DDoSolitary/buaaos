@@ -525,6 +525,7 @@ u_int fork(struct Env *e) {
     if ((child = LIST_FIRST(&env_free_list)) == NULL) {
         panic("fork: could not alloc new env");
     }
+    LIST_REMOVE(child, env_link);
 
     child->env_status = e->env_status;
     child->env_pgdir = e->env_pgdir;
