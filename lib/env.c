@@ -601,6 +601,7 @@ void lab3_kill(u_int env_id) {
         append_env_child(parent, child);
     }
 
+    bzero(e, sizeof(struct Env));
     e->env_status = ENV_FREE;
     LIST_INSERT_HEAD(&env_free_list, e, env_link);
 }
