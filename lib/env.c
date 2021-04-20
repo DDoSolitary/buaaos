@@ -562,3 +562,18 @@ void lab3_output(u_int env_id) {
 
     printf("%08x %08x %08x %08x\n", e->env_parent_id, first_child_id, prev_brother_id, next_brother_id);
 }
+
+static int real_get_sum(struct Env *e) {
+    struct Env *child;
+    int cnt = 1;
+    for (child = e->exam_first_child; child != NULL; child = child->exam_next_brother) {
+        cnt += real_get_sum(child);
+    }
+    return cnt;
+}
+
+int lab3_get_sum(u_int env_id) {
+    struct Env *e;
+    envid2env(env_id, &e, 0);
+    return real_get_sum(e);
+}
