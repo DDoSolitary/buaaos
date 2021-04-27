@@ -4,7 +4,9 @@
 
 #define PRI(pri) ((pri) & 0xff)
 #define PRI_FUNC1(pri) (((pri) >> 8) & 0xff)
-#define BUILD_PRI(pri, func1) ((pri) | ((func1) << 8))
+#define PRI_FUNC2(pri) (((pri) >> 16) & 0xff)
+#define PRI_FUNC3(pri) (((pri) >> 24) & 0xff)
+#define UPDATE_PRI(pri, new_pri) (((pri) & 0xffffff00) | ((new_pri) & 0xff))
 
 /* Overview:
  *  Implement simple round-robin scheduling.
@@ -20,19 +22,30 @@ void sched_yield(void)
 {
     struct Env *e = NULL, *tmp_e;
     int new_pri;
-    u_int func1;
 
     if (curenv != NULL) {
         new_pri = (int)PRI(curenv->env_pri);
-        func1 = PRI_FUNC1(curenv->env_pri);
-        new_pri -= func1;
+        new_pri -= PRI_FUNC1(curenv->env_pri);
         if (new_pri < 0) {
             new_pri = 0;
         }
-        curenv->env_pri = BUILD_PRI(new_pri, func1);
+        curenv->env_pri = UPDATE_PRI(curenv->env_pri, (u_int)new_pri);
+
+        if (++curenv->env_runs == PRI_FUNC2(curenv->env_pri)) {
+            curenv->env_runs = 0;
+            if (PRI_FUNC3(curenv->env_pri) > 0) {
+                curenv->env_status = ENV_NOT_RUNNABLE;
+            }
+        }
     }
 
     LIST_FOREACH(tmp_e, &env_sched_list[0], env_sched_link) {
+        if (tmp_e != curenv && tmp_e->env_status == ENV_NOT_RUNNABLE) {
+            if (++tmp_e->env_runs == PRI_FUNC3(curenv->env_pri)) {
+                curenv->env_runs = 0;
+                curenv->env_status = ENV_RUNNABLE;
+            }
+        }
         if (tmp_e->env_status == ENV_RUNNABLE) {
             if (e == NULL || PRI(tmp_e->env_pri) > PRI(e->env_pri)) {
                 e = tmp_e;
