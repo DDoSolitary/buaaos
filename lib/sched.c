@@ -31,7 +31,7 @@ void sched_yield(void)
      *  LIST_INSERT_TAIL, LIST_REMOVE, LIST_FIRST, LIST_EMPTY
      */
     if (curenv != NULL) {
-        if (count == 0) {
+        if (count == 0 || e->env_status != ENV_RUNNABLE) {
             LIST_REMOVE(curenv, env_sched_link);
             LIST_INSERT_TAIL(&env_sched_list[1 - point], curenv, env_sched_link);
         } else {
@@ -39,13 +39,13 @@ void sched_yield(void)
             env_run(curenv);
         }
     }
-    if (LIST_EMPTY(&env_sched_list[point])) {
-        point = 1 - point;
-    }
-    LIST_FOREACH(e, &env_sched_list[point], env_sched_link) {
-        if (e->env_status == ENV_RUNNABLE) {
-            count = e->env_pri - 1;
-            env_run(e);
+    while (1) {
+        LIST_FOREACH(e, &env_sched_list[point], env_sched_link) {
+            if (e->env_status == ENV_RUNNABLE) {
+                count = e->env_pri - 1;
+                env_run(e);
+            }
         }
+        point = 1 - point;
     }
 }
