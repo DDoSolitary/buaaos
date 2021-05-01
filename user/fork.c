@@ -83,16 +83,34 @@ static void
 pgfault(u_int va)
 {
 	u_int *tmp;
+	u_int perm;
 	//	writef("fork.c:pgfault():\t va:%x\n",va);
+
+	va = ROUNDDOWN(va, BY2PG);
+	perm = (*vpt)[VPN(va)] & 0xfff;
+	if (!(perm & PTE_COW)) {
+		user_panic("pgfault: page is not copy-on-write");
+	}
+	perm = (perm & ~PTE_COW) | PTE_R;
     
     //map the new page at a temporary place
+	tmp = (void *)USTACKTOP;
+	if (syscall_mem_alloc(0, tmp, perm) < 0) {
+		user_panic("pgfault: could not allocate new page");
+	}
 
 	//copy the content
+	user_bcopy(va, tmp, BY2PG);
 	
     //map the page on the appropriate place
+	if (syscall_mem_map(0, tmp, 0, va, perm) < 0) {
+		user_panic("pgfault: could not map the new page");
+	}
 	
     //unmap the temporary place
-	
+	if (syscall_mem_unmap(0, tmp) < 0) {
+		user_panic("pgfault: could not unmap the temporary page");
+	}
 }
 
 /* Overview:
@@ -117,6 +135,18 @@ duppage(u_int envid, u_int pn)
 {
 	u_int addr;
 	u_int perm;
+
+	addr = pn << PGSHIFT;
+	perm = (*vpt)[pn] & 0xfff;
+	if ((perm & PTE_R) && !(perm & PTE_LIBRARY)) {
+		perm = (perm & ~PTE_R) | PTE_COW;
+	}
+	if (syscall_mem_map(0, addr, envid, addr, perm) < 0) {
+		user_panic("duppage: map child failed");
+	}
+	if (syscall_mem_map(0, addr, 0, addr, perm) < 0) {
+		user_panic("duppage: map parent failed");
+	}
 
 	//	user_panic("duppage not implemented");
 }
@@ -143,9 +173,29 @@ fork(void)
 
 
 	//The parent installs pgfault using set_pgfault_handler
+	set_pgfault_handler(pgfault);
 
 	//alloc a new alloc
-
+	if ((newenvid = syscall_env_alloc()) < 0) {
+		return newenvid;
+	} else if (newenvid == 0) {
+		env = &envs[ENVX(syscall_getenvid())];
+		return 0;
+	}
+	for (i = 0; i < USTACKTOP; i += BY2PG) {
+		if (((*vpd)[PDX(i)] & PTE_V) && ((*vpt)[VPN(i)] & PTE_V)) {
+			duppage(newenvid, VPN(i));
+		}
+	}
+	if (syscall_mem_alloc(newenvid, UXSTACKTOP - BY2PG, PTE_V | PTE_R) < 0) {
+		user_panic("fork: could not allocate exception stack");
+	}
+	if (syscall_set_pgfault_handler(newenvid, __asm_pgfault_handler, UXSTACKTOP) < 0) {
+		user_panic("fork: could not set page fault handler");
+	}
+	if (syscall_set_env_status(newenvid, ENV_RUNNABLE) < 0) {
+		user_panic("fork: could not start the child process");
+	}
 
 	return newenvid;
 }
