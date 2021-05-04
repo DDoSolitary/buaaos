@@ -370,7 +370,9 @@ void sys_ipc_recv(int sysno, u_int dstva)
 	}
 	curenv->env_ipc_recving = 1;
 	curenv->env_ipc_dstva = dstva;
-	sys_set_env_status(0, 0, ENV_NOT_RUNNABLE);
+	if (sys_set_env_status(0, 0, ENV_NOT_RUNNABLE) < 0) {
+		panic("sys_ipc_recv: could not set env status");
+	}
 	sys_yield();
 }
 
@@ -421,7 +423,9 @@ int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
 	e->env_ipc_from = curenv->env_id;
 	e->env_ipc_perm = perm;
 	e->env_ipc_recving = 0;
-	sys_set_env_status(0, envid, ENV_RUNNABLE);
+	if ((r = sys_set_env_status(0, envid, ENV_RUNNABLE)) < 0) {
+		return r;
+	}
 
 	return 0;
 }
