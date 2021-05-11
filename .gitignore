@@ -1,6 +1,0 @@
-*.o
-/gxemul/vmlinux
-/readelf/readelf
-/lab-tests/*/lab*-tests
-/user/*.b
-/user/*.x
