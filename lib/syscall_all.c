@@ -430,3 +430,49 @@ int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
 	return 0;
 }
 
+int sys_ipc_can_multi_send(
+	int sysno,
+	u_int value, u_int srcva, u_int perm,
+	u_int envid_1, u_int envid_2, u_int envid_3, u_int envid_4, u_int envid_5)
+{
+	int r;
+	int i;
+	struct Env *e[5];
+	struct Page *p;
+
+	if (srcva >= UTOP) {
+		return -E_INVAL;
+	}
+	if ((r = envid2env(envid_1, &e[0], 0)) < 0) {
+		return r;
+	}
+	if ((r = envid2env(envid_2, &e[1], 0)) < 0) {
+		return r;
+	}
+	if ((r = envid2env(envid_3, &e[2], 0)) < 0) {
+		return r;
+	}
+	if ((r = envid2env(envid_4, &e[3], 0)) < 0) {
+		return r;
+	}
+	if ((r = envid2env(envid_5, &e[4], 0)) < 0) {
+		return r;
+	}
+	for (i = 0; i < 5; i++) {
+		if (!e[i]->env_ipc_recving) {
+			return -E_IPC_NOT_RECV;
+		}
+	}
+	for (i = 0; i < 5; i++) {
+		if (srcva) {
+			p = page_lookup(curenv->env_pgdir, srcva, NULL);
+			page_insert(e[i]->env_pgdir, p, e[i]->env_ipc_dstva, perm);
+		}
+		e[i]->env_ipc_value = value;
+		e[i]->env_ipc_from = curenv->env_id;
+		e[i]->env_ipc_perm = perm;
+		e[i]->env_ipc_recving = 0;
+		sys_set_env_status(0, e[i]->env_id, ENV_RUNNABLE);
+	}
+	return 0;
+}
