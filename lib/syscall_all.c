@@ -394,10 +394,9 @@ void sys_ipc_recv(int sysno, u_int dstva)
  * Hint: the only function you need to call is envid2env.
  */
 /*** exercise 4.7 ***/
-int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
+int sys_ipc_can_send(int sysno, u_int envid, u_int value, int transfer_id, u_int srcva,
 					 u_int perm)
 {
-
 	int r;
 	struct Env *e;
 	struct Page *p;
@@ -405,7 +404,10 @@ int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
 	if (srcva >= UTOP) {
 		return -E_INVAL;
 	}
-	if ((r = envid2env(envid, &e, 0)) < 0) {
+	if (transfer_id < 0) {
+		transfer_id = envid;
+	}
+	if ((r = envid2env(transfer_id, &e, 0)) < 0) {
 		return r;
 	}
 	if (!e->env_ipc_recving) {
@@ -423,7 +425,8 @@ int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
 	e->env_ipc_from = curenv->env_id;
 	e->env_ipc_perm = perm;
 	e->env_ipc_recving = 0;
-	if ((r = sys_set_env_status(0, envid, ENV_RUNNABLE)) < 0) {
+	e->env_ipc_destination_id = envid;
+	if ((r = sys_set_env_status(0, transfer_id, ENV_RUNNABLE)) < 0) {
 		return r;
 	}
 
