@@ -24,20 +24,35 @@ NESTED(handle_sys,TF_SIZE, sp)
     addu    t1, t1, t0                  // t1 <- table entry of specific syscall
     lw      t2, 0(t1)                   // t2 <- function entry of specific syscall
 
-    lw      t0, TF_REG29(sp)            // t0 <- user's stack pointer
-    lw      t3, 16(t0)                  // t3 <- the 5th argument of msyscall
-    lw      t4, 20(t0)                  // t4 <- the 6th argument of msyscall
+    lw t0, TF_REG29(sp)
+    move s0, sp
+    LOOP_BEGIN:
+    ble a1, 3, LOOP_END
+    nop
+    addiu a1, a1, -1
+    addiu t1, a1, 2
+    sll t1, t1, 2
+    addu t1, t1, t0
+    lw t1, (t1)
+    addiu sp, sp, -4
+    sw t1, (sp)
+    b LOOP_BEGIN
+    nop
+    LOOP_END:
+    addiu sp, sp, -16
+    move t1, a1
+    move a1, a2
+    move a2, a3
+    bne t1, 3, SKIP_A3
+    nop
+    lw a3, 16(t0)
+    SKIP_A3:
 
-    // TODO: Allocate a space of six arguments on current kernel stack and copy the six arguments to proper location
-    addiu sp, sp, -24
-    sw t3, 16(sp)
-    sw t4, 20(sp)
-    
     jalr    t2                          // Invoke sys_* function
     nop
     
     // TODO: Resume current kernel stack
-    addiu sp, sp, 24
+    move sp, s0
     
     sw      v0, TF_REG2(sp)             // Store return value of function sys_* (in $v0) into trapframe
 
