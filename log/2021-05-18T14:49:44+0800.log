@@ -1,0 +1,111 @@
+Autotest: Begin at Tue May 18 14:49:44 CST 2021
+Begin build at Tue May 18 14:49:45 CST 2021
+Cleanning the project.................
+
+for d in mm user boot drivers init lib ;	\
+		do					\
+			make --directory=$d clean; \
+		done; \
+	rm -rf *.o *~ gxemul/vmlinux
+make[1]: Entering directory `/usr/src/workdir/mm'
+rm -rf *~ *.o
+make[1]: Leaving directory `/usr/src/workdir/mm'
+make[1]: Entering directory `/usr/src/workdir/user'
+rm -rf *~ *.o *.b.c *.x *.b
+make[1]: Leaving directory `/usr/src/workdir/user'
+make[1]: Entering directory `/usr/src/workdir/boot'
+rm -rf *~ *.o
+make[1]: Leaving directory `/usr/src/workdir/boot'
+make[1]: Entering directory `/usr/src/workdir/drivers'
+for d in gxconsole; \
+		do				\
+			make --directory=$d clean; \
+		done
+make[2]: Entering directory `/usr/src/workdir/drivers/gxconsole'
+rm -rf *.o *~
+make[2]: Leaving directory `/usr/src/workdir/drivers/gxconsole'
+make[1]: Leaving directory `/usr/src/workdir/drivers'
+make[1]: Entering directory `/usr/src/workdir/init'
+rm -rf *~ *.o
+make[1]: Leaving directory `/usr/src/workdir/init'
+make[1]: Entering directory `/usr/src/workdir/lib'
+rm -rf *~ *.o
+make[1]: Leaving directory `/usr/src/workdir/lib'
+
+Building the project..................
+
+make --directory=mm
+make[1]: Entering directory `/usr/src/workdir/mm'
+/OSLAB/compiler/usr/bin/mips_4KC-gcc -O -G 0 -mno-abicalls -fno-builtin -Wa,-xgot -Wall -fPIC -march=r3000 -I./ -I../ -I../include/ -c pmap.c
+/OSLAB/compiler/usr/bin/mips_4KC-gcc -O -G 0 -mno-abicalls -fno-builtin -Wa,-xgot -Wall -fPIC -march=r3000 -I./ -I../ -I../include/ -c tlb_asm.S
+make[1]: Leaving directory `/usr/src/workdir/mm'
+make --directory=user
+make[1]: Entering directory `/usr/src/workdir/user'
+echo as entry.S
+as entry.S
+/OSLAB/compiler/usr/bin/mips_4KC-gcc -O -G 0 -mno-abicalls -fno-builtin -Wa,-xgot -Wall -fPIC -march=r3000 -I../include/ -c -o entry.o entry.S
+entry.S: Assembler messages:
+entry.S:104: Warning: Used $at without ".set noat"
+echo as syscall_wrap.S
+as syscall_wrap.S
+/OSLAB/compiler/usr/bin/mips_4KC-gcc -O -G 0 -mno-abicalls -fno-builtin -Wa,-xgot -Wall -fPIC -march=r3000 -I../include/ -c -o syscall_wrap.o syscall_wrap.S
+echo user1 cc thread_test.c
+user1 cc thread_test.c
+/OSLAB/compiler/usr/bin/mips_4KC-gcc -O -G 0 -mno-abicalls -fno-builtin -Wa,-xgot -Wall -fPIC -march=r3000 -I../include/ -S thread_test.c
+thread_test.c: In function 'thread0_task':
+thread_test.c:59: warning: pointer targets in passing argument 1 of 'ipc_recv' differ in signedness
+thread_test.c: In function 'thread1_task':
+thread_test.c:74: warning: pointer targets in passing argument 1 of 'ipc_recv' differ in signedness
+thread_test.c:90: warning: pointer targets in passing argument 1 of 'ipc_recv' differ in signedness
+thread_test.c: In function 'expand_pageout':
+thread_test.c:109: warning: control reaches end of non-void function
+thread_test.c: In function 'umain':
+thread_test.c:143: warning: implicit declaration of function 'stack_standalone_test'
+thread_test.c: At top level:
+thread_test.c:158: warning: 'asm_sync' defined but not used
+thread_test.c:159: warning: 'wrapper_large_stack_test' defined but not used
+/OSLAB/compiler/usr/bin/mips_4KC-gcc -O -G 0 -mno-abicalls -fno-builtin -Wa,-xgot -Wall -fPIC -march=r3000 -I../include/ -c -o thread_test.o thread_test.c
+thread_test.c: In function 'thread0_task':
+thread_test.c:59: warning: pointer targets in passing argument 1 of 'ipc_recv' differ in signedness
+thread_test.c: In function 'thread1_task':
+thread_test.c:74: warning: pointer targets in passing argument 1 of 'ipc_recv' differ in signedness
+thread_test.c:90: warning: pointer targets in passing argument 1 of 'ipc_recv' differ in signedness
+thread_test.c: In function 'expand_pageout':
+thread_test.c:109: warning: control reaches end of non-void function
+thread_test.c: In function 'umain':
+thread_test.c:143: warning: implicit declaration of function 'stack_standalone_test'
+thread_test.c: At top level:
+thread_test.c:158: warning: 'asm_sync' defined but not used
+thread_test.c:159: warning: 'wrapper_large_stack_test' defined but not used
+echo user1 cc printf.c
+user1 cc printf.c
+/OSLAB/compiler/usr/bin/mips_4KC-gcc -O -G 0 -mno-abicalls -fno-builtin -Wa,-xgot -Wall -fPIC -march=r3000 -I../include/ -S printf.c
+/OSLAB/compiler/usr/bin/mips_4KC-gcc -O -G 0 -mno-abicalls -fno-builtin -Wa,-xgot -Wall -fPIC -march=r3000 -I../include/ -c -o printf.o printf.c
+echo user1 cc print.c
+user1 cc print.c
+/OSLAB/compiler/usr/bin/mips_4KC-gcc -O -G 0 -mno-abicalls -fno-builtin -Wa,-xgot -Wall -fPIC -march=r3000 -I../include/ -S print.c
+/OSLAB/compiler/usr/bin/mips_4KC-gcc -O -G 0 -mno-abicalls -fno-builtin -Wa,-xgot -Wall -fPIC -march=r3000 -I../include/ -c -o print.o print.c
+echo user1 cc libos.c
+user1 cc libos.c
+/OSLAB/compiler/usr/bin/mips_4KC-gcc -O -G 0 -mno-abicalls -fno-builtin -Wa,-xgot -Wall -fPIC -march=r3000 -I../include/ -S libos.c
+/OSLAB/compiler/usr/bin/mips_4KC-gcc -O -G 0 -mno-abicalls -fno-builtin -Wa,-xgot -Wall -fPIC -march=r3000 -I../include/ -c -o libos.o libos.c
+echo user1 cc fork.c
+user1 cc fork.c
+/OSLAB/compiler/usr/bin/mips_4KC-gcc -O -G 0 -mno-abicalls -fno-builtin -Wa,-xgot -Wall -fPIC -march=r3000 -I../include/ -S fork.c
+fork.c: In function 'pgfault':
+fork.c:98: warning: passing argument 2 of 'syscall_mem_alloc' makes integer from pointer without a cast
+fork.c:103: warning: passing argument 1 of 'user_bcopy' makes pointer from integer without a cast
+fork.c:106: warning: passing argument 2 of 'syscall_mem_map' makes integer from pointer without a cast
+fork.c:111: warning: passing argument 2 of 'syscall_mem_unmap' makes integer from pointer without a cast
+fork.c: In function 'duppage':
+fork.c:141: error: 'share_data' undeclared (first use in this function)
+fork.c:141: error: (Each undeclared identifier is reported only once
+fork.c:141: error: for each function it appears in.)
+make[1]: *** [fork.o] Error 1
+rm thread_test.o
+make[1]: Leaving directory `/usr/src/workdir/user'
+make: *** [user] Error 2
+Compile Error!
+
+End build at Tue May 18 14:49:47 CST 2021
+[33m[01m[ You got 0 (of 100) this time. Tue May 18 14:49:47 CST 2021 ][0m
