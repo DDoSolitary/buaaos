@@ -106,3 +106,9 @@ nop
 		jr	k0			//
 		lw	sp,TF_REG29(sp)  /* Deallocate stack */  
 
+.globl uget_sp
+uget_sp:
+li v0, 0xfffff000
+and v0, v0, sp
+jr ra
+nop

@@ -131,14 +131,14 @@ pgfault(u_int va)
  */
 /*** exercise 4.10 ***/
 static void
-duppage(u_int envid, u_int pn)
+duppage(u_int envid, u_int pn, int cow_data)
 {
 	u_int addr;
 	u_int perm;
 
 	addr = pn << PGSHIFT;
 	perm = (*vpt)[pn] & 0xfff;
-	if ((perm & PTE_R) && !(perm & PTE_LIBRARY)) {
+	if ((cow_data || addr >= uget_sp()) && (perm & PTE_R) && !(perm & PTE_LIBRARY)) {
 		perm = (perm & ~PTE_R) | PTE_COW;
 	}
 	if (syscall_mem_map(0, addr, envid, addr, perm) < 0) {
@@ -168,7 +168,7 @@ fork(void)
 	// Your code here.
 	u_int newenvid;
 	extern struct Env *envs;
-	extern struct Env *env;
+	extern struct Env **env;
 	u_int i;
 
 
@@ -179,12 +179,44 @@ fork(void)
 	if ((newenvid = syscall_env_alloc()) < 0) {
 		return newenvid;
 	} else if (newenvid == 0) {
-		env = &envs[ENVX(syscall_getenvid())];
+		*env = &envs[ENVX(syscall_getenvid())];
 		return 0;
 	}
 	for (i = 0; i < USTACKTOP; i += BY2PG) {
 		if (((*vpd)[PDX(i)] & PTE_V) && ((*vpt)[VPN(i)] & PTE_V)) {
-			duppage(newenvid, VPN(i));
+			duppage(newenvid, VPN(i), 1);
+		}
+	}
+	if (syscall_mem_alloc(newenvid, UXSTACKTOP - BY2PG, PTE_V | PTE_R) < 0) {
+		user_panic("fork: could not allocate exception stack");
+	}
+	if (syscall_set_pgfault_handler(newenvid, __asm_pgfault_handler, UXSTACKTOP) < 0) {
+		user_panic("fork: could not set page fault handler");
+	}
+	if (syscall_set_env_status(newenvid, ENV_RUNNABLE) < 0) {
+		user_panic("fork: could not start the child process");
+	}
+
+	return newenvid;
+}
+
+int tfork(void) {
+	int newenvid;
+	extern struct Env *envs;
+	extern struct Env **env;
+	u_int i;
+
+	set_pgfault_handler(pgfault);
+
+	if ((newenvid = syscall_env_alloc()) < 0) {
+		return newenvid;
+	} else if (newenvid == 0) {
+		*env = &envs[ENVX(syscall_getenvid())];
+		return 0;
+	}
+	for (i = 0; i < USTACKTOP; i += BY2PG) {
+		if (((*vpd)[PDX(i)] & PTE_V) && ((*vpt)[VPN(i)] & PTE_V)) {
+			duppage(newenvid, VPN(i), 0);
 		}
 	}
 	if (syscall_mem_alloc(newenvid, UXSTACKTOP - BY2PG, PTE_V | PTE_R) < 0) {
