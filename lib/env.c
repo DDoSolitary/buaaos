@@ -190,6 +190,8 @@ env_alloc(struct Env **new, u_int parent_id)
     e->env_parent_id = parent_id;
     e->env_status = ENV_RUNNABLE;
     e->env_ipc_recving = 0;
+    e->env_pgcow = 0;
+    e->env_pgout = 0;
 
     /*Step 4: Focus on initializing the sp register and cp0_status of env_tf field, located at this new Env. */
     e->env_tf.regs[29] = USTACKTOP;
@@ -393,6 +395,10 @@ env_free(struct Env *e)
 void
 env_destroy(struct Env *e)
 {
+    printf("envid:%08x\n", e->env_id);
+    printf("pgcow:%08x\n", e->env_pgcow);
+    printf("pgout:%08x\n", e->env_pgout);
+
     /* Hint: free e. */
     env_free(e);
 

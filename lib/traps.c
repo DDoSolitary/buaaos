@@ -52,6 +52,7 @@ page_fault_handler(struct Trapframe *tf)
 {
     struct Trapframe PgTrapFrame;
     extern struct Env *curenv;
+    printf("\nEnv:0x%x, code:0x%x, pgcow:%d, pgout:%d\n", curenv->env_id, *(u_int *)tf->cp0_epc, ++curenv->env_pgcow, curenv->env_pgout);
 
     bcopy(tf, &PgTrapFrame, sizeof(struct Trapframe));
 
