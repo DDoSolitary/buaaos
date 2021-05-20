@@ -117,10 +117,10 @@ void init_disk() {
         disk[2+i].type = BLOCK_BMAP;
     }
     for(i = 0; i < nbitblock; ++i) {
-        memset(disk[2+i].data, 0xff, NBLOCK/8);
+        memset(disk[2+i].data, 0xff, BY2BLK);
     }
     if(NBLOCK != nbitblock * BIT2BLK) {
-        diff = NBLOCK % BY2BLK / 8;
+        diff = NBLOCK % BIT2BLK / 8;
         memset(disk[2+(nbitblock-1)].data+diff, 0x00, BY2BLK - diff);
     }
 
@@ -185,9 +185,10 @@ void save_block_link(struct File *f, int nblk, int bno)
 
 // Make new block contians link to files in a directory.
 int make_link_block(struct File *dirf, int nblk) {
-    save_block_link(dirf, nblk, nextbno);
+    int bno = next_block(BLOCK_FILE);
+    save_block_link(dirf, nblk, bno);
     dirf->f_size += BY2BLK;
-    return next_block(BLOCK_FILE);
+    return bno;
 }
 
 // Overview:

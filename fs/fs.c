@@ -213,7 +213,7 @@ alloc_block_num(void)
 	for (blockno = 3; blockno < super->s_nblocks; blockno++) {
 		if (bitmap[blockno / 32] & (1 << (blockno % 32))) {	//the block is free
 			bitmap[blockno / 32] &= ~(1 << (blockno % 32));
-			write_block(blockno / BIT2BLK); // write to disk.
+			write_block(blockno / BIT2BLK + 2); // write to disk.
 			return blockno;
 		}
 	}
@@ -288,7 +288,7 @@ read_bitmap(void)
 	void *blk = NULL;
 
 	// Step 1: calculate this number of bitmap blocks, and read all bitmap blocks to memory.
-	nbitmap = super->s_nblocks / BIT2BLK + 1;
+	nbitmap = (super->s_nblocks + BIT2BLK - 1) / BIT2BLK;
 	for (i = 0; i < nbitmap; i++) {
 		read_block(i + 2, blk, 0);
 	}
@@ -722,22 +722,19 @@ file_truncate(struct File *f, u_int newsize)
 {
 	u_int bno, old_nblocks, new_nblocks;
 
-	old_nblocks = f->f_size / BY2BLK + 1;
-	new_nblocks = newsize / BY2BLK + 1;
+	old_nblocks = (f->f_size + BY2BLK - 1) / BY2BLK;
+	new_nblocks = (newsize + BY2BLK - 1) / BY2BLK;
 
 	if (newsize == 0) {
 		new_nblocks = 0;
 	}
 
-	if (new_nblocks <= NDIRECT) {
+	for (bno = new_nblocks; bno < old_nblocks; bno++) {
+		file_clear_block(f, bno);
+	}
+	if (new_nblocks <= NDIRECT && old_nblocks > NDIRECT) {
+		free_block(f->f_indirect);
 		f->f_indirect = 0;
-		for (bno = new_nblocks; bno < old_nblocks; bno++) {
-			file_clear_block(f, bno);
-		}
-	} else {
-		for (bno = new_nblocks; bno < old_nblocks; bno++) {
-			file_clear_block(f, bno);
-		}
 	}
 
 	f->f_size = newsize;
@@ -777,7 +774,7 @@ file_flush(struct File *f)
 	u_int diskno;
 	int r;
 
-	nblocks = f->f_size / BY2BLK + 1;
+	nblocks = (f->f_size + BY2BLK - 1) / BY2BLK;
 
 	for (bno = 0; bno < nblocks; bno++) {
 		if ((r = file_map_block(f, bno, &diskno, 0)) < 0) {
