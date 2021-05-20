@@ -1,2 +1,10 @@
-gxemul/fs.img
-fs/fsformat
+*.o
+/gxemul/vmlinux
+/gxemul/fs.img
+/readelf/readelf
+/lab-tests/*/lab*-tests
+/user/*.b
+/user/*.x
+/fs/*.b
+/fs/*.x
+/fs/fsformat
