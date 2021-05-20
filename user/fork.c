@@ -95,20 +95,20 @@ pgfault(u_int va)
     
     //map the new page at a temporary place
 	tmp = (void *)USTACKTOP;
-	if (syscall_mem_alloc(0, tmp, perm) < 0) {
+	if (syscall_mem_alloc(0, (u_int)tmp, perm) < 0) {
 		user_panic("pgfault: could not allocate new page");
 	}
 
 	//copy the content
-	user_bcopy(va, tmp, BY2PG);
+	user_bcopy((void *)va, tmp, BY2PG);
 	
     //map the page on the appropriate place
-	if (syscall_mem_map(0, tmp, 0, va, perm) < 0) {
+	if (syscall_mem_map(0, (u_int)tmp, 0, va, perm) < 0) {
 		user_panic("pgfault: could not map the new page");
 	}
 	
     //unmap the temporary place
-	if (syscall_mem_unmap(0, tmp) < 0) {
+	if (syscall_mem_unmap(0, (u_int)tmp) < 0) {
 		user_panic("pgfault: could not unmap the temporary page");
 	}
 }
