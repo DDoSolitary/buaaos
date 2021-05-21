@@ -430,6 +430,26 @@ int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
 	return 0;
 }
 
+struct {
+	u_int addr, len;
+} dev_ranges[] = {
+	{ .addr = 0x10000000, .len = 0x20 },
+	{ .addr = 0x13000000, .len = 0x4200 },
+	{ .addr = 0x15000000, .len = 0x200 }
+};
+
+static int check_dev_range(u_int addr, u_int len) {
+	int i;
+	for (i = 0; i < 3; i++) {
+		if (addr >= dev_ranges[i].addr &&
+			addr + len <= dev_ranges[i].addr + dev_ranges[i].len) {
+
+			return 0;
+		}
+	}
+	return -E_INVAL;
+}
+
 /* Overview:
  * 	This function is used to write data to device, which is
  * 	represented by its mapped physical address.
@@ -457,7 +477,12 @@ int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
  */
 int sys_write_dev(int sysno, u_int va, u_int dev, u_int len)
 {
-        // Your code here
+	int r;
+	if ((r = check_dev_range(dev, len)) < 0) {
+		return r;
+	}
+	bcopy((void *)va, (void *)dev + 0xa0000000, len);
+	return 0;
 }
 
 /* Overview:
@@ -478,5 +503,10 @@ int sys_write_dev(int sysno, u_int va, u_int dev, u_int len)
  */
 int sys_read_dev(int sysno, u_int va, u_int dev, u_int len)
 {
-        // Your code here
+	int r;
+	if ((r = check_dev_range(dev, len)) < 0) {
+		return r;
+	}
+	bcopy((void *)dev + 0xa0000000, (void *)va, len);
+	return 0;
 }

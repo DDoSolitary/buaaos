@@ -15,6 +15,13 @@
 /* Maximum disk size we can handle (1GB) */
 #define DISKMAX		0x40000000
 
+#define DISK_ADDR          0x13000000
+#define DISK_ADDR_OFF      (DISK_ADDR + 0x0000)
+#define DISK_ADDR_ID       (DISK_ADDR + 0x0010)
+#define DISK_ADDR_OP       (DISK_ADDR + 0x0020)
+#define DISK_ADDR_STAT     (DISK_ADDR + 0x0030)
+#define DISK_ADDR_BUF      (DISK_ADDR + 0x4000)
+
 /* ide.c */
 void ide_read(u_int diskno, u_int secno, void *dst, u_int nsecs);
 void ide_write(u_int diskno, u_int secno, void *src, u_int nsecs);

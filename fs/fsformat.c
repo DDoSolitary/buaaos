@@ -7,6 +7,10 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
+#include <limits.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 
 /* Prevent inc/types.h, included from inc/fs.h,
@@ -206,17 +210,22 @@ int make_link_block(struct File *dirf, int nblk) {
 //      use make_link_block function
 struct File *create_file(struct File *dirf) {
     struct File *dirblk;
-    int i, bno, found;
+    int i, bno;
     int nblk = dirf->f_size / BY2BLK;
     
-    // Your code here
-    // Step1: According to different range of nblk, make classified discussion to 
-    //        calculate the correct block number.
-
-
-    // Step2: Find an unused pointer
-
-
+    if (nblk > 0) {
+        bno = nblk > NDIRECT ?
+            ((int *)disk[dirf->f_indirect].data)[nblk - 1] :
+            dirf->f_direct[nblk - 1];
+        dirblk = (struct File *)disk[bno].data;
+        for (i = 0; i < FILE2BLK; i++) {
+            if (!dirblk[i].f_name[0]) {
+                return &dirblk[i];
+            }
+        }
+    }
+    bno = make_link_block(dirf, nblk);
+    return (struct File *)disk[bno].data;
 }
 
 // Write file to disk under specified dir.
@@ -253,7 +262,33 @@ void write_file(struct File *dirf, const char *path) {
 // Post-Condition:
 //      We ASSUM that this funcion will never fail
 void write_directory(struct File *dirf, char *name) {
-    // Your code here
+    struct File *target = create_file(dirf);
+    DIR *dir = opendir(name);
+    struct dirent *ent;
+    size_t name_len = strlen(name);
+    char *path = malloc(name_len + NAME_MAX + 1);
+
+    strcpy(path, name);
+    if (dir) {
+        errno = 0;
+        while (ent = readdir(dir)) {
+            if (ent->d_type != DT_REG && ent->d_type != DT_DIR) {
+                continue;
+            }
+            strcpy(path + name_len, ent->d_name);
+            if (ent->d_type == DT_REG) {
+                write_file(dirf, path);
+            } else {
+                write_directory(dirf, path);
+            }
+        }
+        if (errno) {
+            perror("write_directory: readdir");
+        }
+        closedir(dir);
+    } else {
+        perror("write_directory: opendir");
+    }
 }
 
 int main(int argc, char **argv) {
