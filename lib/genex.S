@@ -61,6 +61,16 @@ and	t0, t2
 andi	t1, t0, STATUSF_IP4
 bnez	t1, timer_irq
 nop
+
+andi t1, t0, 0x400
+beqz t1, NO_CONS
+nop
+move a0, t2
+jal handle_cons_ir
+nop
+j ret_from_exception
+nop
+NO_CONS:
 END(handle_int)
 
 	.extern delay

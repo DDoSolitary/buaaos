@@ -4,6 +4,7 @@
 #include <printf.h>
 #include <kclock.h>
 #include <trap.h>
+#include <kcons.h>
 
 extern char aoutcode[];
 extern char boutcode[];
@@ -22,8 +23,9 @@ void mips_init()
 	env_init();
 	// initialize exception vector.
 	trap_init();
+	kcons_init();
 	// initialize PIT.
-	kclock_init();
+	// kclock_init();
 
 	// Create process using macro 'ENC_CREATE'
 	// For more details about 'ENV_CREATE', see include/env.h
