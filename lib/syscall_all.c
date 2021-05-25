@@ -510,3 +510,28 @@ int sys_read_dev(int sysno, u_int va, u_int dev, u_int len)
 	bcopy((void *)dev + 0xa0000000, (void *)va, len);
 	return 0;
 }
+
+u_int sys_get_time(int sysno) {
+	u_int ts = 0;
+	sys_write_dev(0, (u_int)&ts, 0x15000000, 4);
+	sys_read_dev(0, (u_int)&ts, 0x15000010, 4);
+	return ts;
+}
+
+u_int sys_cgetc();
+
+u_int sys_read_str(int sysno, char *buf, int secno) {
+	static u_int ide_id = 0;
+	static u_int op = 1;
+	u_int len = 0;
+	u_int off = secno * 512;
+	while ((buf[len] = sys_cgetc()) != '\r') {
+		len++;
+	}
+	buf[len] = '\0';
+	sys_write_dev(0, (u_int)&off, 0x13000000, 4);
+	sys_write_dev(0, (u_int)&ide_id, 0x13000010, 4);
+	sys_write_dev(0, (u_int)buf, 0x13004000, len + 1);
+	sys_write_dev(0, (u_int)&op, 0x13000020, 4);
+	return len;
+}

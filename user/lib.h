@@ -67,6 +67,8 @@ void syscall_ipc_recv(u_int dstva);
 int syscall_cgetc();
 int syscall_write_dev(u_int va, u_int dev, u_int len);
 int syscall_read_dev(u_int va, u_int dev, u_int len);
+u_int syscall_get_time();
+u_int syscall_read_str(char *buf, int secno);
 
 // string.c
 int strlen(const char *s);

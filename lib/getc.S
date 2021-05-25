@@ -5,7 +5,7 @@
 .set noreorder
 LEAF(sys_cgetc)
 
-1:	lb	t0, 0x90000000
+1:	lb	t0, 0xb0000000
 	beqz	t0, 1b
 	nop
 	move	v0,t0
