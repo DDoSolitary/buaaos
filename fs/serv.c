@@ -247,7 +247,9 @@ serve_sync(u_int envid)
 void
 serve_create(u_int envid, struct Fsreq_create *rq)
 {
-	int r = file_create(rq->req_path, NULL, rq->req_isdir);
+	int isdir = rq->req_isdir;
+	int createdir = isdir >= 2;
+	int r = file_create(rq->req_path, NULL, isdir - createdir * 2, createdir);
 	ipc_send(envid, r, 0, 0);
 }
 
