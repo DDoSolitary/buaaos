@@ -712,7 +712,7 @@ file_open(char *path, struct File **file)
 //	On success set *file to point at the file and return 0.
 // 	On error return < 0.
 int
-file_create(char *path, struct File **file)
+file_create(char *path, struct File **file, int isdir)
 {
 	char name[MAXNAMELEN];
 	int r;
@@ -722,7 +722,11 @@ file_create(char *path, struct File **file)
 		return -E_FILE_EXISTS;
 	}
 
-	if (r != -E_NOT_FOUND || dir == 0) {
+	if (r == -E_NOT_FOUND) {
+		if (!dir) {
+			return -E_DIR_NOT_EXIST;
+		}
+	} else {
 		return r;
 	}
 
@@ -731,7 +735,10 @@ file_create(char *path, struct File **file)
 	}
 
 	strcpy((char *)f->f_name, name);
-	*file = f;
+	f->f_type = isdir ? FTYPE_DIR : FTYPE_REG;
+	if (file) {
+		*file = f;
+	}
 	return 0;
 }
 

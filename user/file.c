@@ -277,3 +277,8 @@ sync(void)
 	return fsipc_sync();
 }
 
+int
+user_create(char *path, int isdir)
+{
+	return fsipc_create(path, isdir);
+}
