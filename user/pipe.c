@@ -120,7 +120,7 @@ piperead(struct Fd *fd, void *vbuf, u_int n, u_int offset)
 	// Use _pipeisclosed to check whether the pipe is closed.
 	int i;
 	struct Pipe *p = (struct Pipe *)fd2data(fd);
-	char *rbuf = (char *)vbuf + offset;
+	char *rbuf = (char *)vbuf;
 
 	for (i = 0; i < n; i++) {
 		while (p->p_rpos == p->p_wpos) {
@@ -147,7 +147,7 @@ pipewrite(struct Fd *fd, const void *vbuf, u_int n, u_int offset)
 	// Use _pipeisclosed to check whether the pipe is closed.
 	int i;
 	struct Pipe *p = (struct Pipe *)fd2data(fd);
-	char *wbuf = (char *)vbuf + offset;
+	char *wbuf = (char *)vbuf;
 
 	for (i = 0; i < n; i++) {
 		while (p->p_wpos - p->p_rpos == BY2PIPE) {
