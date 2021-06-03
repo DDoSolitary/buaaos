@@ -82,7 +82,6 @@ runcmd(char *s)
 {
 	char *argv[MAXARGS], *t;
 	int argc, c, i, r, p[2], fd, rightpipe;
-	int fdnum;
 	rightpipe = 0;
 	gettoken(s, 0);
 again:
@@ -106,12 +105,32 @@ again:
 			}
 			// Your code here -- open t for reading,
 			// dup it onto fd 0, and then close the fd you got.
-			user_panic("< redirection not implemented");
+			if ((fd = open(t, O_RDONLY)) < 0) {
+				user_panic("runcmd: input redir: open failed");
+			}
+			if (dup(fd, 0) < 0) {
+				user_panic("runcmd: input redir: dup failed");
+			}
+			if (close(fd) < 0) {
+				user_panic("runcmd: input redir: close failed");
+			}
 			break;
 		case '>':
+			if(gettoken(0, &t) != 'w'){
+				writef("syntax error: > not followed by word\n");
+				exit();
+			}
 			// Your code here -- open t for writing,
 			// dup it onto fd 1, and then close the fd you got.
-			user_panic("> redirection not implemented");
+			if ((fd = open(t, O_WRONLY)) < 0) {
+				user_panic("runcmd: output redir: open failed");
+			}
+			if (dup(fd, 1) < 0) {
+				user_panic("runcmd: output redir: dup failed");
+			}
+			if (close(fd) < 0) {
+				user_panic("runcmd: output redir: close failed");
+			}
 			break;
 		case '|':
 			// Your code here.
@@ -129,7 +148,35 @@ again:
 			//		set "rightpipe" to the child envid
 			//		goto runit, to execute this piece of the pipeline
 			//			and then wait for the right side to finish
-			user_panic("| not implemented");
+			if (pipe(p) < 0) {
+				user_panic("runcmd: pipe: pipe failed");
+			}
+			rightpipe = fork();
+			if (rightpipe < 0) {
+				user_panic("runcmd: pipe: fork failed");
+			} else if (rightpipe == 0) {
+				if (dup(p[0], 0) < 0) {
+					user_panic("runcmd: pipe parent: dup failed");
+				}
+				if (close(p[0]) < 0) {
+					user_panic("runcmd: pipe parent: close failed");
+				}
+				if (close(p[1]) < 0) {
+					user_panic("runcmd: pipe parent: close failed");
+				}
+				goto again;
+			} else {
+				if (dup(p[1], 1) < 0) {
+					user_panic("runcmd: pipe child: dup failed");
+				}
+				if (close(p[0]) < 0) {
+					user_panic("runcmd: pipe child: close failed");
+				}
+				if (close(p[1]) < 0) {
+					user_panic("runcmd: pipe child: close failed");
+				}
+				goto runit;
+			}
 			break;
 		}
 	}
