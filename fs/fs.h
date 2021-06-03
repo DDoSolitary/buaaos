@@ -15,6 +15,13 @@
 /* Maximum disk size we can handle (1GB) */
 #define DISKMAX		0x40000000
 
+#define DISK_ADDR          0x13000000
+#define DISK_ADDR_OFF      (DISK_ADDR + 0x0000)
+#define DISK_ADDR_ID       (DISK_ADDR + 0x0010)
+#define DISK_ADDR_OP       (DISK_ADDR + 0x0020)
+#define DISK_ADDR_STAT     (DISK_ADDR + 0x0030)
+#define DISK_ADDR_BUF      (DISK_ADDR + 0x4000)
+
 /* ide.c */
 void ide_read(u_int diskno, u_int secno, void *dst, u_int nsecs);
 void ide_write(u_int diskno, u_int secno, void *src, u_int nsecs);
@@ -25,10 +32,11 @@ int file_get_block(struct File *f, u_int blockno, void **pblk);
 int file_set_size(struct File *f, u_int newsize);
 void file_close(struct File *f);
 int file_remove(char *path);
-void fs_init(void);
 int file_dirty(struct File *f, u_int offset);
+void file_flush(struct File *);
+
+void fs_init(void);
 void fs_sync(void);
-void file_flush(struct File*);
 extern u_int *bitmap;
 int map_block(u_int);
 int alloc_block(void);
