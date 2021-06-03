@@ -190,6 +190,7 @@ env_alloc(struct Env **new, u_int parent_id)
     e->env_parent_id = parent_id;
     e->env_status = ENV_RUNNABLE;
     e->env_ipc_recving = 0;
+    e->env_runs = 0;
 
     /*Step 4: Focus on initializing the sp register and cp0_status of env_tf field, located at this new Env. */
     e->env_tf.regs[29] = USTACKTOP;
@@ -426,6 +427,8 @@ extern void lcontext(u_int contxt);
 void
 env_run(struct Env *e)
 {
+    e->env_runs++;
+
     /*Step 1: save register state of curenv. */
     /* Hint: if there is an environment running, you should do
     *  switch the context and save the registers. You can imitate env_destroy() 's behaviors.*/
