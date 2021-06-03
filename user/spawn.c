@@ -102,25 +102,49 @@ int
 usr_load_elf(int fd , Elf32_Phdr *ph, int child_envid){
 	//Hint: maybe this function is useful 
 	//      If you want to use this func, you should fill it ,it's not hard
+
+	int r;
+	u_int i, start, end;
+
+	if ((r = seek(fd, ph->p_offset)) < 0) {
+		return r;
+	}
+	for (i = ROUNDDOWN(ph->p_vaddr, BY2PG); i < ph->p_vaddr + ph->p_memsz; i += BY2PG) {
+		if ((r = syscall_mem_alloc(0, TMPPAGE, PTE_V | PTE_R)) < 0) {
+			return r;
+		}
+		end = MIN(i + BY2PG, ph->p_vaddr + ph->p_filesz);
+		if (end > i) {
+			start = i > ph->p_vaddr ? i : ph->p_vaddr;
+			if ((r = readn(fd, (char *)(start - i + TMPPAGE), end - start)) < 0) {
+				return r;
+			}
+		}
+		if ((r = syscall_mem_map(0, TMPPAGE, child_envid, i, PTE_V | PTE_R)) < 0) {
+			return r;
+		}
+	}
+	if ((r = syscall_mem_unmap(0, TMPPAGE)) < 0) {
+		return r;
+	}
 	return 0;
 }
 
 int spawn(char *prog, char **argv)
 {
-	u_char elfbuf[512];
 	int r;
 	int fd;
 	u_int child_envid;
-	int size, text_start;
-	u_int i, *blk;
+	int size;
+	u_int i;
 	u_int esp;
-	Elf32_Ehdr* elf;
-	Elf32_Phdr* ph;
+	Elf32_Ehdr elf;
+	Elf32_Phdr ph;
 	// Note 0: some variable may be not used,you can cancel them as you like
 	// Step 1: Open the file specified by `prog` (prog is the path of the program)
-	if((r=open(prog, O_RDONLY))<0){
+	if((fd=open(prog, O_RDONLY))<0){
 		user_panic("spawn ::open line 102 RDONLY wrong !\n");
-		return r;
+		return fd;
 	}
 	// Your code begins here
 	// Before Step 2 , You had better check the "target" spawned is a execute bin 
@@ -136,6 +160,36 @@ int spawn(char *prog, char **argv)
 	// Note2: You can achieve this func in any way ，remember to ensure the correctness
 	//        Maybe you can review lab3 
 	// Your code ends here
+
+	if ((size = ((struct Filefd *)num2fd(fd))->f_file.f_size) < sizeof(Elf32_Ehdr)) {
+		return -E_NOT_EXEC;
+	}
+	if ((r = readn(fd, &elf, sizeof(Elf32_Ehdr))) < 0) {
+		return r;
+	}
+	if (!usr_is_elf_format((u_char *)&elf)) {
+		return -E_NOT_EXEC;
+	}
+
+	if ((child_envid = syscall_env_alloc()) < 0) {
+		return child_envid;
+	}
+
+	init_stack(child_envid, argv, &esp);
+
+	for (i = 0; i < elf.e_phnum; i++) {
+		if ((r = seek(fd, elf.e_phoff + i * elf.e_phentsize)) < 0) {
+			return r;
+		}
+		if ((r = readn(fd, &ph, elf.e_phentsize)) < 0) {
+			return r;
+		}
+		if (ph.p_type == PT_LOAD) {
+			if ((r = usr_load_elf(fd, &ph, child_envid)) < 0) {
+				return r;
+			}
+		}
+	}
 
 	struct Trapframe *tf;
 	writef("\n::::::::::spawn size : %x  sp : %x::::::::\n",size,esp);
