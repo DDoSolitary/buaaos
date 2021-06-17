@@ -123,6 +123,7 @@ static u_int sem_svr_open(const char *name, u_short val, int opt) {
 		if (opt == SEM_CREATE) {
 			return (u_int)-1;
 		}
+		sem->ref++;
 		return (u_int)(sem - sems);
 	}
 	if (opt == SEM_OPEN || strlen(name) > SEM_NAME_MAX) {
@@ -130,6 +131,7 @@ static u_int sem_svr_open(const char *name, u_short val, int opt) {
 	}
 	r = sem_svr_alloc(val);
 	if (r <= SEM_NSEMS_MAX) {
+		sems[r].ref = 1;
 		strcpy(sems[r].name, name);
 	}
 	return r;
