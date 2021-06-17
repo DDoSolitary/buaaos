@@ -126,7 +126,7 @@ static u_int sem_svr_open(const char *name, u_short val, int opt) {
 		sem->ref++;
 		return (u_int)(sem - sems);
 	}
-	if (opt == SEM_OPEN || strlen(name) > SEM_NAME_MAX) {
+	if (opt == SEM_OPEN || name[0] != '/' || strlen(name) > SEM_NAME_MAX) {
 		return (u_int)-1;
 	}
 	r = sem_svr_alloc(val);
