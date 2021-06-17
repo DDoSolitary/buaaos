@@ -10,6 +10,9 @@
 	.globl fsipcbuf
 fsipcbuf:
 	.space BY2PG
+	.globl semipcbuf
+semipcbuf:
+	.space BY2PG
 	.globl fdtab
 fdtab:
 	.space BY2PG
@@ -42,10 +45,12 @@ vpd:
 	.globl _start
 _start:
 	//1: j 1b
-	lw	a0, 0(sp)
-	lw	a1, 4(sp)
+	//lw	a0, 0(sp)
+	//lw	a1, 4(sp)
 	//sw	a0, -4(sp)
 	//sw	a1, -0(sp)
+	li a0, 0
+	li a1, 0
 nop
 	jal	libmain
 	nop
