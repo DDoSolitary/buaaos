@@ -4,7 +4,7 @@
 
 extern char semipcbuf[BY2PG];
 
-sem_t named_sems[SEM_NSEMS_MAX + 1];
+sem_t named_sems[SEM_NSEMS_MAX];
 
 static u_int semipc(u_short req, u_short arg) {
 	ipc_send(envs[0].env_id, ((u_int)arg << 16) | req, (u_int)&semipcbuf, PTE_V);
@@ -19,7 +19,7 @@ int sem_init(sem_t *sem, int pshared, unsigned value) {
 		return -1;
 	}
 	r = semipc(SEMREQ_ALLOC, (u_short)value);
-	if (r > SEM_NSEMS_MAX) {
+	if (r >= SEM_NSEMS_MAX) {
 		return -1;
 	}
 	*sem = r;
@@ -78,7 +78,7 @@ sem_t *sem_open(const char *name, int oflag, ...) {
 	}
 
 	r = semipc(req, arg);
-	if (r > SEM_NSEMS_MAX) {
+	if (r >= SEM_NSEMS_MAX) {
 		return SEM_FAILED;
 	}
 	named_sems[r] = (sem_t)r;

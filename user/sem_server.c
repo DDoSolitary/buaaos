@@ -13,7 +13,7 @@ typedef struct sem_wait {
 	u_int env_id;
 } sem_wait_t;
 
-sem_wait_t sem_waits[SEM_WAIT_MAX + 1];
+sem_wait_t sem_waits[SEM_WAIT_MAX];
 
 LIST_HEAD(sem_wait_head, sem_wait);
 struct sem_wait_head sem_wait_free_list;
@@ -26,7 +26,7 @@ typedef struct sem_entry {
 	struct sem_wait_head wait_list;
 } sem_entry_t;
 
-sem_entry_t sems[SEM_NSEMS_MAX + 1];
+sem_entry_t sems[SEM_NSEMS_MAX];
 
 LIST_HEAD(sem_head, sem_entry);
 struct sem_head sem_free_list;
@@ -35,12 +35,12 @@ static void sem_svr_init() {
 	int i;
 
 	LIST_INIT(&sem_free_list);
-	for (i = SEM_NSEMS_MAX; i >= 0; i--) {
+	for (i = SEM_NSEMS_MAX - 1; i >= 0; i--) {
 		LIST_INSERT_HEAD(&sem_free_list, &sems[i], link);
 	}
 
 	LIST_INIT(&sem_wait_free_list);
-	for (i = SEM_WAIT_MAX; i >= 0; i--) {
+	for (i = SEM_WAIT_MAX - 1; i >= 0; i--) {
 		LIST_INSERT_HEAD(&sem_wait_free_list, &sem_waits[i], link);
 	}
 }
@@ -106,7 +106,7 @@ static sem_entry_t *sem_svr_find(const char *name) {
 	sem_entry_t *ret = NULL;
 	u_int i;
 
-	for (i = 0; i <= SEM_NSEMS_MAX; i++) {
+	for (i = 0; i < SEM_NSEMS_MAX; i++) {
 		if (!strcmp(name, sems[i].name)) {
 			ret = &sems[i];
 			break;
@@ -130,7 +130,7 @@ static u_int sem_svr_open(const char *name, u_short val, int opt) {
 		return (u_int)-1;
 	}
 	r = sem_svr_alloc(val);
-	if (r <= SEM_NSEMS_MAX) {
+	if (r < SEM_NSEMS_MAX) {
 		sems[r].ref = 1;
 		strcpy(sems[r].name, name);
 	}

@@ -13,11 +13,11 @@
 #define SEMREQ_CLOSE 9
 #define SEMREQ_UNLINK 10
 
-#define SEM_NSEMS_MAX 1023
+#define SEM_NSEMS_MAX 1024
 #define SEM_VALUE_MAX 65535
 #define SEM_FAILED NULL
 
-#define SEM_WAIT_MAX 1023
+#define SEM_WAIT_MAX 1024
 #define SEM_NAME_MAX 256
 
 typedef u_short sem_t;
