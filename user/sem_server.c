@@ -13,10 +13,10 @@ typedef struct sem_wait {
 	u_int env_id;
 } sem_wait_t;
 
-sem_wait_t sem_waits[SEM_WAIT_MAX];
+static sem_wait_t sem_waits[SEM_WAIT_MAX];
 
 LIST_HEAD(sem_wait_head, sem_wait);
-struct sem_wait_head sem_wait_free_list;
+static struct sem_wait_head sem_wait_free_list;
 
 typedef struct sem_entry {
 	LIST_ENTRY(sem_entry) link;
@@ -26,10 +26,10 @@ typedef struct sem_entry {
 	struct sem_wait_head wait_list;
 } sem_entry_t;
 
-sem_entry_t sems[SEM_NSEMS_MAX];
+static sem_entry_t sems[SEM_NSEMS_MAX];
 
 LIST_HEAD(sem_head, sem_entry);
-struct sem_head sem_free_list;
+static struct sem_head sem_free_list;
 
 static void sem_svr_init() {
 	int i;
