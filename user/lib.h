@@ -12,8 +12,7 @@ extern void umain();
 extern void libmain();
 extern void exit();
 
-extern struct Env *env;
-
+extern struct Env *envs;
 
 #define USED(x) (void)(x)
 //////////////////////////////////////////////////////printf
@@ -65,6 +64,9 @@ void syscall_panic(char *msg);
 int syscall_ipc_can_send(u_int envid, u_int value, u_int srcva, u_int perm);
 void syscall_ipc_recv(u_int dstva);
 int syscall_cgetc();
+int syscall_env_alloc2(void (*fn)(void *, void *), void *stack, void *arg0, void *arg1);
+
+void __asm_pgfault_handler(void);
 
 // string.c
 int strlen(const char *s);
@@ -92,6 +94,7 @@ int pipeisclosed(int fdnum);
 int	pageref(void *);
 
 // pgfault.c
+u_int get_xstacktop();
 void set_pgfault_handler(void (*fn)(u_int va));
 
 // fprintf.c

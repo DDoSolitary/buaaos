@@ -5,8 +5,13 @@
 #include <mmu.h>
 
 extern void (*__pgfault_handler)(u_int);
-extern void __asm_pgfault_handler(void);
 
+u_int get_xstacktop() {
+	u_int ret;
+	
+	ret = ROUND((u_int)&ret, PDMAP);
+	return ret;
+}
 
 //
 // Set the page fault handler function.
@@ -18,12 +23,14 @@ extern void __asm_pgfault_handler(void);
 void
 set_pgfault_handler(void (*fn)(u_int va))
 {
+	u_int xstacktop = get_xstacktop();
+
 	if (__pgfault_handler == 0) {
 		// Your code here:
 		// map one page of exception stack with top at UXSTACKTOP
 		// register assembly handler and stack with operating system
-		if (syscall_mem_alloc(0, UXSTACKTOP - BY2PG, PTE_V | PTE_R) < 0 ||
-			syscall_set_pgfault_handler(0, __asm_pgfault_handler, UXSTACKTOP) < 0) {
+		if (syscall_mem_alloc(0, xstacktop - BY2PG, PTE_V | PTE_R) < 0 ||
+			syscall_set_pgfault_handler(0, __asm_pgfault_handler, xstacktop) < 0) {
 			writef("cannot set pgfault handler\n");
 			return;
 		}

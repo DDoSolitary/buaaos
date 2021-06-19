@@ -4,8 +4,6 @@
 #include <mmu.h>
 #include <env.h>
 
-extern struct Env *env;
-
 // Send val to whom.  This function keeps trying until
 // it succeeds.  It should panic() on any error other than
 // -E_IPC_NOT_RECV.
@@ -35,6 +33,8 @@ ipc_send(u_int whom, u_int val, u_int srcva, u_int perm)
 u_int
 ipc_recv(u_int *whom, u_int dstva, u_int *perm)
 {
+	struct Env *env = &envs[ENVX(syscall_getenvid())];
+
 	//printf("ipc_recv:come 0\n");
 	syscall_ipc_recv(dstva);
 
@@ -48,4 +48,3 @@ ipc_recv(u_int *whom, u_int dstva, u_int *perm)
 
 	return env->env_ipc_value;
 }
-

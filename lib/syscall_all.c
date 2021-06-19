@@ -267,7 +267,7 @@ int sys_env_alloc(void)
 	int r;
 	struct Env *e;
 
-	if ((r = env_alloc(&e, curenv->env_id)) < 0) {
+	if ((r = env_alloc(&e, curenv->env_id, 1)) < 0) {
 		return r;
 	}
 	e->env_tf = *((struct Trapframe *)KERNEL_SP - 1);
@@ -430,3 +430,22 @@ int sys_ipc_can_send(int sysno, u_int envid, u_int value, u_int srcva,
 	return 0;
 }
 
+int sys_env_alloc2(int sysno, u_int fn, u_int stack, u_int arg0, u_int arg1) {
+	int r;
+	struct Env *e;
+
+	if ((r = env_alloc(&e, curenv->env_id, 0)) < 0) {
+		return r;
+	}
+	e->env_tf = *((struct Trapframe *)KERNEL_SP - 1);
+	e->env_tf.pc = fn;
+	e->env_tf.regs[4] = arg0; // a0
+	e->env_tf.regs[5] = arg1; // a1
+	e->env_tf.regs[29] = stack; // sp
+	e->env_status = ENV_NOT_RUNNABLE;
+	e->env_pri = curenv->env_pri;
+	e->env_pgdir = curenv->env_pgdir;
+	e->env_cr3 = curenv->env_cr3;
+
+	return e->env_id;
+}

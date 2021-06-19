@@ -21,7 +21,8 @@ USERLIB := printf.o \
 		fsipc.o \
 		console.o \
 		fprintf.o \
-		semaphore.o
+		semaphore.o \
+		pthread.o
 
 CFLAGS += -nostdlib -static
 

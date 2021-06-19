@@ -168,7 +168,7 @@ env_setup_vm(struct Env *e)
  */
 /*** exercise 3.5 ***/
 int
-env_alloc(struct Env **new, u_int parent_id)
+env_alloc(struct Env **new, u_int parent_id, int setup_vm)
 {
     int r;
     struct Env *e;
@@ -181,7 +181,7 @@ env_alloc(struct Env **new, u_int parent_id)
 
     /*Step 2: Call certain function(has been completed just now) to init kernel memory layout for this new Env.
      *The function mainly maps the kernel address to this new Env address. */
-    if ((r = env_setup_vm(e)) < 0) {
+    if (setup_vm && (r = env_setup_vm(e)) < 0) {
         return r;
     }
 
@@ -319,7 +319,7 @@ env_create_priority(u_char *binary, int size, int priority)
     int r;
 
     /*Step 1: Use env_alloc to alloc a new env. */
-    if ((r = env_alloc(&e, 0)) < 0) {
+    if ((r = env_alloc(&e, 0, 1)) < 0) {
         panic("env_create_priority: could not allocate new env: %d\n", r);
     }
 
@@ -457,9 +457,9 @@ void env_check()
     pe0 = 0;
         pe1 = 0;
         pe2 = 0;
-        assert(env_alloc(&pe0, 0) == 0);
-        assert(env_alloc(&pe1, 0) == 0);
-        assert(env_alloc(&pe2, 0) == 0);
+        assert(env_alloc(&pe0, 0, 1) == 0);
+        assert(env_alloc(&pe1, 0, 1) == 0);
+        assert(env_alloc(&pe2, 0, 1) == 0);
 
         assert(pe0);
         assert(pe1 && pe1 != pe0);
@@ -471,7 +471,7 @@ void env_check()
     LIST_INIT(&env_free_list);
 
     // should be no free memory
-     assert(env_alloc(&pe, 0) == -E_NO_FREE_ENV);
+     assert(env_alloc(&pe, 0, 1) == -E_NO_FREE_ENV);
 
     // recover env_free_list
     env_free_list = fl;

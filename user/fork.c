@@ -1,6 +1,7 @@
 // implement fork from user space
 
 #include "lib.h"
+#include "pthread.h"
 #include <mmu.h>
 #include <env.h>
 
@@ -82,7 +83,7 @@ void user_bzero(void *v, u_int n)
 static void
 pgfault(u_int va)
 {
-	u_int *tmp;
+	u_int tmp;
 	u_int perm;
 	//	writef("fork.c:pgfault():\t va:%x\n",va);
 
@@ -94,21 +95,21 @@ pgfault(u_int va)
 	perm = (perm & ~PTE_COW) | PTE_R;
     
     //map the new page at a temporary place
-	tmp = (void *)USTACKTOP;
-	if (syscall_mem_alloc(0, (u_int)tmp, perm) < 0) {
+	tmp = get_xstacktop() - 2 * BY2PG;
+	if (syscall_mem_alloc(0, tmp, perm) < 0) {
 		user_panic("pgfault: could not allocate new page");
 	}
 
 	//copy the content
-	user_bcopy((void *)va, tmp, BY2PG);
+	user_bcopy((void *)va, (void *)tmp, BY2PG);
 	
     //map the page on the appropriate place
-	if (syscall_mem_map(0, (u_int)tmp, 0, va, perm) < 0) {
+	if (syscall_mem_map(0, tmp, 0, va, perm) < 0) {
 		user_panic("pgfault: could not map the new page");
 	}
 	
     //unmap the temporary place
-	if (syscall_mem_unmap(0, (u_int)tmp) < 0) {
+	if (syscall_mem_unmap(0, tmp) < 0) {
 		user_panic("pgfault: could not unmap the temporary page");
 	}
 }
@@ -161,16 +162,22 @@ duppage(u_int envid, u_int pn)
  *       `syscall_set_pgfault_handler`. 
  */
 /*** exercise 4.9 4.15***/
-extern void __asm_pgfault_handler(void);
 int
 fork(void)
 {
 	// Your code here.
 	u_int newenvid;
-	extern struct Env *envs;
-	extern struct Env *env;
 	u_int i;
+	u_int xstacktop = get_xstacktop();
+	size_t hook_count = _pthread_atfork_count;
+	void (*hook)();
 
+	for (i = hook_count - 1; i < hook_count; i--) {
+		hook = _pthread_prepare_hooks[i];
+		if (hook) {
+			hook();
+		}
+	}
 
 	//The parent installs pgfault using set_pgfault_handler
 	set_pgfault_handler(pgfault);
@@ -179,22 +186,37 @@ fork(void)
 	if ((newenvid = syscall_env_alloc()) < 0) {
 		return newenvid;
 	} else if (newenvid == 0) {
-		env = &envs[ENVX(syscall_getenvid())];
+		for (i = 0; i < hook_count; i++) {
+			hook = _pthread_child_hooks[i];
+			if (hook) {
+				hook();
+			}
+		}
 		return 0;
 	}
-	for (i = 0; i < USTACKTOP; i += BY2PG) {
+	for (i = 0; i < UTOP; i += BY2PG) {
+		if (UTOP - i < PTHREAD_THREADS_MAX * PDMAP &&
+			((UTOP - i) % PDMAP == 1 || (UTOP - i) % PDMAP == 2)) {
+			continue;
+		}
 		if (((*vpd)[PDX(i)] & PTE_V) && ((*vpt)[VPN(i)] & PTE_V)) {
 			duppage(newenvid, VPN(i));
 		}
 	}
-	if (syscall_mem_alloc(newenvid, UXSTACKTOP - BY2PG, PTE_V | PTE_R) < 0) {
+	if (syscall_mem_alloc(newenvid, xstacktop - BY2PG, PTE_V | PTE_R) < 0) {
 		user_panic("fork: could not allocate exception stack");
 	}
-	if (syscall_set_pgfault_handler(newenvid, __asm_pgfault_handler, UXSTACKTOP) < 0) {
+	if (syscall_set_pgfault_handler(newenvid, __asm_pgfault_handler, xstacktop) < 0) {
 		user_panic("fork: could not set page fault handler");
 	}
 	if (syscall_set_env_status(newenvid, ENV_RUNNABLE) < 0) {
 		user_panic("fork: could not start the child process");
+	}
+	for (i = 0; i < hook_count; i++) {
+		hook = _pthread_parent_hooks[i];
+		if (hook) {
+			hook();
+		}
 	}
 
 	return newenvid;

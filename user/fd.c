@@ -31,7 +31,7 @@ dev_lookup(int dev_id, struct Dev **dev)
 			return 0;
 		}
 
-	writef("[%08x] unknown device type %d\n", env->env_id, dev_id);
+	writef("[%08x] unknown device type %d\n", syscall_getenvid(), dev_id);
 	return -E_INVAL;
 }
 
@@ -211,7 +211,7 @@ read(int fdnum, void *buf, u_int n)
 
 	//writef("read() come 2 %x\n",(int)env);
 	if ((fd->fd_omode & O_ACCMODE) == O_WRONLY) {
-		writef("[%08x] read %d -- bad mode\n", env->env_id, fdnum);
+		writef("[%08x] read %d -- bad mode\n", syscall_getenvid(), fdnum);
 		return -E_INVAL;
 	}
 
@@ -261,7 +261,7 @@ write(int fdnum, const void *buf, u_int n)
 
 	//writef("write comes 2\n");
 	if ((fd->fd_omode & O_ACCMODE) == O_RDONLY) {
-		writef("[%08x] write %d -- bad mode\n", env->env_id, fdnum);
+		writef("[%08x] write %d -- bad mode\n", syscall_getenvid(), fdnum);
 		return -E_INVAL;
 	}
 

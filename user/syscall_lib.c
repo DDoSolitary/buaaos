@@ -87,3 +87,7 @@ syscall_cgetc()
 {
 	return msyscall(SYS_cgetc, 0, 0, 0, 0, 0);
 }
+
+int syscall_env_alloc2(void (*fn)(void *, void *), void *stack, void *arg0, void *arg1) {
+	return msyscall(SYS_env_alloc2, (u_int)fn, (u_int)stack, (u_int)arg0, (u_int)arg1, 0);
+}
