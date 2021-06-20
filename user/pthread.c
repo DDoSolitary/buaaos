@@ -215,7 +215,9 @@ int pthread_setspecific(pthread_key_t key, const void *value) {
 int pthread_setcancelstate(int state, int *oldstate) {
 	thread_t *thread = &threads[pthread_self()];
 
-	*oldstate = thread->cancel_state;
+	if (oldstate) {
+		*oldstate = thread->cancel_state;
+	}
 	thread->cancel_state = state;
 
 	if (state == PTHREAD_CANCEL_ENABLE) {
@@ -229,7 +231,9 @@ int pthread_setcancelstate(int state, int *oldstate) {
 int pthread_setcanceltype(int type, int *oldtype) {
 	thread_t *thread = &threads[pthread_self()];
 
-	*oldtype = thread->cancel_type;
+	if (oldtype) {
+		*oldtype = thread->cancel_type;
+	}
 	thread->cancel_type = type;
 	return 0;
 }
