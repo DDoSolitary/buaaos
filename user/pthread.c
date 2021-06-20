@@ -342,11 +342,13 @@ void pthread_exit(void *value_ptr) {
 
 	last_thread = 1;
 	for (j = 0; j < PTHREAD_THREADS_MAX; j++) {
-		if (threads[j].env_id && !(threads[j].flags & THREAD_ZOMBIE)) {
+		if (threads[j].env_id && threads[j].env_id != thread->env_id &&
+			!(threads[j].flags & THREAD_ZOMBIE)) {
 			last_thread = 0;
 		}
 	}
 	if (last_thread) {
+		user_assert(!sem_post(&global_mutex));
 		_pthread_proc_exit();
 	}
 
