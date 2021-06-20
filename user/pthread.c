@@ -139,7 +139,6 @@ int pthread_equal(pthread_t t1, pthread_t t2) {
 
 int pthread_attr_init(pthread_attr_t *attr) {
 	attr->detachstate = PTHREAD_CREATE_JOINABLE;
-	attr->stacksize = PDMAP;
 	return 0;
 }
 
@@ -154,19 +153,6 @@ int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate) {
 
 int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate) {
 	attr->detachstate = detachstate;
-	return 0;
-}
-
-int pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stacksize) {
-	*stacksize = attr->stacksize;
-	return 0;
-}
-
-int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize) {
-	if (stacksize < PTHREAD_STACK_MIN || stacksize & 3) {
-		return EINVAL;
-	}
-	attr->stacksize = stacksize;
 	return 0;
 }
 

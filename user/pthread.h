@@ -30,7 +30,6 @@ typedef u_int pthread_key_t;
 
 typedef struct {
 	int detachstate;
-	size_t stacksize;
 } pthread_attr_t;
 
 extern void (*_pthread_prepare_hooks[])();
@@ -49,9 +48,6 @@ int pthread_attr_destroy(pthread_attr_t *attr);
 
 int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *detachstate);
 int pthread_attr_setdetachstate(pthread_attr_t *attr, int detachstate);
-
-int pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stacksize);
-int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stacksize);
 
 int pthread_key_create(pthread_key_t *key, void (*destructor)(void *));
 int pthread_key_delete(pthread_key_t key);
