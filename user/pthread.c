@@ -44,7 +44,7 @@ static void pthread_reinit() {
 	int i;
 
 	LIST_INIT(&thread_free_list);
-	for (i = PTHREAD_THREADS_MAX - 1; i >= 0; i--) {
+	for (i = PTHREAD_THREADS_MAX - 1; i >= 1; i--) {
 		threads[i].env_id = 0;
 		LIST_INSERT_HEAD(&thread_free_list, &threads[i], link);
 	}
