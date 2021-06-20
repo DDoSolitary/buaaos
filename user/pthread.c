@@ -39,6 +39,7 @@ void (*_pthread_child_hooks[_PTHREAD_ATFORK_MAX])();
 size_t _pthread_atfork_count;
 
 static sem_t global_mutex;
+static pthread_attr_t default_attr;
 
 static void pthread_reinit() {
 	int i;
@@ -80,6 +81,8 @@ void _pthread_init() {
 		sem_init(&global_mutex, 0, 1)) {
 		user_panic("pthread_init: could not create semaphores");
 	}
+
+	pthread_attr_init(&default_attr);
 
 	pthread_atfork(NULL, NULL, &pthread_reinit);
 }
@@ -275,6 +278,10 @@ int pthread_create(
 	user_bzero(entry, sizeof(thread_t));
 	if (sem_init(&entry->sem, 0, 0)) {
 		user_panic("pthread_create: could not create thread semaphore");
+	}
+
+	if (!attr) {
+		attr = &default_attr;
 	}
 	if (attr->detachstate == PTHREAD_CREATE_DETACHED) {
 		entry->flags |= THREAD_DETACHED;
