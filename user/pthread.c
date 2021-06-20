@@ -50,6 +50,7 @@ static void pthread_reinit() {
 		LIST_INSERT_HEAD(&thread_free_list, &threads[i], link);
 	}
 
+	user_bzero(&threads[0], sizeof(thread_t));
 	threads[0].env_id = syscall_getenvid();
 
 	if (sem_init(&threads[0].sem, 0, 0) ||
