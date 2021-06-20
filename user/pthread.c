@@ -7,6 +7,8 @@
 #define THREAD_DETACHED 2
 #define THREAD_ZOMBIE 4
 
+int _pthread_disabled __attribute__((weak));
+
 typedef struct tls_entry {
 	LIST_ENTRY(tls_entry) link;
 	void (*dtor)(void *);
@@ -58,6 +60,10 @@ static void pthread_reinit() {
 void _pthread_init() {
 	int i;
 
+	if (_pthread_disabled) {
+		return;
+	}
+
 	LIST_INIT(&tls_entry_free_list);
 	for (i = PTHREAD_KEYS_MAX - 1; i >= 0; i--) {
 		LIST_INSERT_HEAD(&tls_entry_free_list, &tls_entries[i], link);
@@ -79,13 +85,18 @@ void _pthread_init() {
 }
 
 void _pthread_proc_exit() {
-	pthread_t i, self = pthread_self();
+	pthread_t i, self;
+
+	if (_pthread_disabled) {
+		syscall_env_destroy(0, 1);
+	}
 
 	user_assert(!sem_wait(&global_mutex));
 
 	// other threads may be waiting on semaphores when killed, so we need to
 	// clear the wait list before calling sem_destroy
 
+	self = pthread_self();
 	for (i = 0; i < PTHREAD_THREADS_MAX; i++) {
 		if (threads[i].env_id) {
 			if (i != self && !(threads[i].flags & THREAD_ZOMBIE)) {

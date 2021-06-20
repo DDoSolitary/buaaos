@@ -8,6 +8,8 @@
 #define SEM_OPENIF 1
 #define SEM_CREATE 2
 
+int _pthread_disabled = 1;
+
 typedef struct sem_wait {
 	LIST_ENTRY(sem_wait) link;
 	u_int env_id;
