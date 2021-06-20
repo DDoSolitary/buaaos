@@ -274,6 +274,7 @@ int pthread_create(
 		return EAGAIN;
 	}
 	LIST_REMOVE(entry, link);
+	*thread = (pthread_t)(entry - threads);
 
 	user_bzero(entry, sizeof(thread_t));
 	if (sem_init(&entry->sem, 0, 0)) {
@@ -309,7 +310,6 @@ int pthread_create(
 
 	user_assert(!sem_post(&global_mutex));
 
-	*thread = (pthread_t)(entry - threads);
 	return 0;
 }
 
