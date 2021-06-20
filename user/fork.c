@@ -196,7 +196,7 @@ fork(void)
 	}
 	for (i = 0; i < UTOP; i += BY2PG) {
 		if (UTOP - i < PTHREAD_THREADS_MAX * PDMAP &&
-			((UTOP - i) % PDMAP == 1 || (UTOP - i) % PDMAP == 2)) {
+			((UTOP - i) % PDMAP == BY2PG || (UTOP - i) % PDMAP == 2 * BY2PG)) {
 			continue;
 		}
 		if (((*vpd)[PDX(i)] & PTE_V) && ((*vpt)[VPN(i)] & PTE_V)) {
