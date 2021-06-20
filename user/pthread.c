@@ -89,7 +89,7 @@ void _pthread_proc_exit() {
 	for (i = 0; i < PTHREAD_THREADS_MAX; i++) {
 		if (threads[i].env_id) {
 			if (i != self && !(threads[i].flags & THREAD_ZOMBIE)) {
-				syscall_env_destroy(threads[i].env_id);
+				syscall_env_destroy(threads[i].env_id, 0);
 			}
 			while (!sem_getvalue(&threads[i].sem)) {
 				user_assert(!sem_post(&threads[i].sem));
@@ -103,7 +103,7 @@ void _pthread_proc_exit() {
 	}
 	user_assert(!sem_destroy(&global_mutex));
 
-	syscall_env_destroy(0);
+	syscall_env_destroy(0, 1);
 }
 
 pthread_t pthread_self() {
@@ -345,7 +345,7 @@ void pthread_exit(void *value_ptr) {
 
 	user_assert(!sem_post(&global_mutex));
 
-	syscall_env_destroy(0);
+	syscall_env_destroy(0, 0);
 }
 
 int pthread_cancel(pthread_t thread) {

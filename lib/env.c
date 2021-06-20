@@ -349,7 +349,7 @@ env_create(u_char *binary, int size)
  *  Frees env e and all memory it uses.
  */
 void
-env_free(struct Env *e)
+env_free(struct Env *e, int free_vm)
 {
     Pte *pt;
     u_int pdeno, pteno, pa;
@@ -357,29 +357,32 @@ env_free(struct Env *e)
     /* Hint: Note the environment's demise.*/
     printf("[%08x] free env %08x\n", curenv ? curenv->env_id : 0, e->env_id);
 
-    /* Hint: Flush all mapped pages in the user portion of the address space */
-    for (pdeno = 0; pdeno < PDX(UTOP); pdeno++) {
-        /* Hint: only look at mapped page tables. */
-        if (!(e->env_pgdir[pdeno] & PTE_V)) {
-            continue;
-        }
-        /* Hint: find the pa and va of the page table. */
-        pa = PTE_ADDR(e->env_pgdir[pdeno]);
-        pt = (Pte *)KADDR(pa);
-        /* Hint: Unmap all PTEs in this page table. */
-        for (pteno = 0; pteno <= PTX(~0); pteno++)
-            if (pt[pteno] & PTE_V) {
-                page_remove(e->env_pgdir, (pdeno << PDSHIFT) | (pteno << PGSHIFT));
+    if (free_vm) {
+        /* Hint: Flush all mapped pages in the user portion of the address space */
+        for (pdeno = 0; pdeno < PDX(UTOP); pdeno++) {
+            /* Hint: only look at mapped page tables. */
+            if (!(e->env_pgdir[pdeno] & PTE_V)) {
+                continue;
             }
-        /* Hint: free the page table itself. */
-        e->env_pgdir[pdeno] = 0;
+            /* Hint: find the pa and va of the page table. */
+            pa = PTE_ADDR(e->env_pgdir[pdeno]);
+            pt = (Pte *)KADDR(pa);
+            /* Hint: Unmap all PTEs in this page table. */
+            for (pteno = 0; pteno <= PTX(~0); pteno++)
+                if (pt[pteno] & PTE_V) {
+                    page_remove(e->env_pgdir, (pdeno << PDSHIFT) | (pteno << PGSHIFT));
+                }
+            /* Hint: free the page table itself. */
+            e->env_pgdir[pdeno] = 0;
+            page_decref(pa2page(pa));
+        }
+        /* Hint: free the page directory. */
+        pa = e->env_cr3;
+        e->env_pgdir = 0;
+        e->env_cr3 = 0;
         page_decref(pa2page(pa));
     }
-    /* Hint: free the page directory. */
-    pa = e->env_cr3;
-    e->env_pgdir = 0;
-    e->env_cr3 = 0;
-    page_decref(pa2page(pa));
+
     /* Hint: return the environment to the free list. */
     e->env_status = ENV_FREE;
     LIST_INSERT_HEAD(&env_free_list, e, env_link);
@@ -391,10 +394,10 @@ env_free(struct Env *e)
  *  if e is the current env.
  */
 void
-env_destroy(struct Env *e)
+env_destroy(struct Env *e, int free_vm)
 {
     /* Hint: free e. */
-    env_free(e);
+    env_free(e, free_vm);
 
     /* Hint: schedule to run a new environment. */
     if (curenv == e) {

@@ -82,7 +82,7 @@ void sys_yield(void)
  * Post-Condition:
  * 	Return 0 on success, < 0 when error occurs.
  */
-int sys_env_destroy(int sysno, u_int envid)
+int sys_env_destroy(int sysno, u_int envid, int free_vm)
 {
 	/*
 		printf("[%08x] exiting gracefully\n", curenv->env_id);
@@ -96,7 +96,7 @@ int sys_env_destroy(int sysno, u_int envid)
 	}
 
 	printf("[%08x] destroying %08x\n", curenv->env_id, e->env_id);
-	env_destroy(e);
+	env_destroy(e, free_vm);
 	return 0;
 }
 

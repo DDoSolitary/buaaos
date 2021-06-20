@@ -45,7 +45,7 @@ extern int msyscall(int, int, int, int, int, int);
 void syscall_putchar(char ch);
 u_int syscall_getenvid(void);
 void syscall_yield(void);
-int syscall_env_destroy(u_int envid);
+int syscall_env_destroy(u_int envid, int free_vm);
 int syscall_set_pgfault_handler(u_int envid, void (*func)(void),
 								u_int xstacktop);
 int syscall_mem_alloc(u_int envid, u_int va, u_int perm);

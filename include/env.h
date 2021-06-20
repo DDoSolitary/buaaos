@@ -51,10 +51,10 @@ extern struct Env_list env_sched_list[2]; // runnable env list
 
 void env_init(void);
 int env_alloc(struct Env **e, u_int parent_id, int setup_vm);
-void env_free(struct Env *);
+void env_free(struct Env *, int free_vm);
 void env_create_priority(u_char *binary, int size, int priority);
 void env_create(u_char *binary, int size);
-void env_destroy(struct Env *e);
+void env_destroy(struct Env *e, int free_vm);
 
 int envid2env(u_int envid, struct Env **penv, int checkperm);
 void env_run(struct Env *e);
