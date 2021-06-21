@@ -41,6 +41,8 @@ size_t _pthread_atfork_count;
 static sem_t global_mutex;
 static pthread_attr_t default_attr;
 
+pthread_key_t _pthread_handler_key;
+
 static void pthread_reinit() {
 	int i;
 	thread_t *thread = &threads[pthread_self()];
@@ -63,6 +65,7 @@ static void pthread_reinit() {
 
 void _pthread_init() {
 	int i;
+	static struct _pthread_handler_rec *main_head = NULL;
 
 	if (_pthread_disabled) {
 		return;
@@ -86,7 +89,8 @@ void _pthread_init() {
 	}
 
 	pthread_attr_init(&default_attr);
-
+	pthread_key_create(&_pthread_handler_key, NULL);
+	pthread_setspecific(_pthread_handler_key, &main_head);
 	pthread_atfork(NULL, NULL, &pthread_reinit);
 }
 
@@ -238,7 +242,9 @@ void pthread_testcancel() {
 
 static void thread_main(void *arg0, void *arg1) {
 	void *(*fn)(void *) = (void *(*)(void *))arg0;
+	struct _pthread_handler_rec *head = NULL;
 
+	pthread_setspecific(_pthread_handler_key, &head);
 	pthread_exit(fn(arg1));
 }
 
@@ -315,6 +321,13 @@ void pthread_exit(void *value_ptr) {
 	void (*dtor)(void *);
 	void *val;
 	int last_thread;
+
+	struct _pthread_handler_rec *head =
+		*(struct _pthread_handler_rec **)pthread_getspecific(_pthread_handler_key);
+	while (head) {
+		head->rtn(head->arg);
+		head = head->next;
+	}
 
 	for (i = 0; i < PTHREAD_KEYS_MAX; i++) {
 		user_assert(!sem_wait(&global_mutex));

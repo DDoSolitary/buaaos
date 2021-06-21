@@ -68,4 +68,25 @@ int pthread_join(pthread_t thread, void **value_ptr);
 
 int pthread_atfork(void (*prepare)(), void (*parent)(), void (*child)());
 
+struct _pthread_handler_rec {
+	void (*rtn)(void *);
+	void *arg;
+	struct _pthread_handler_rec *next;
+};
+
+extern pthread_key_t _pthread_handler_key;
+
+#define pthread_cleanup_push(_rtn, _arg) { \
+	struct _pthread_handler_rec __cleanup_handler, **__head; \
+	__cleanup_handler.rtn = _rtn; \
+	__cleanup_handler.arg = _arg; \
+	__head = (struct _pthread_handler_rec **)pthread_getspecific(_pthread_handler_key); \
+	__cleanup_handler.next = *__head; \
+	*__head = &__cleanup_handler;
+
+#define pthread_cleanup_pop(ex) \
+	*__head = __cleanup_handler.next; \
+	if (ex) (*__cleanup_handler.rtn)(__cleanup_handler.arg); \
+}
+
 #endif
