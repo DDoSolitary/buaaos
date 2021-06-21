@@ -7,10 +7,10 @@
 extern void (*__pgfault_handler)(u_int);
 
 u_int get_xstacktop() {
-	u_int ret;
+	u_int sp;
 	
-	ret = ROUND((u_int)&ret, PDMAP);
-	return ret;
+	asm ("move %0, $sp" : "=r" (sp));
+	return ROUND(sp, PDMAP);
 }
 
 //

@@ -43,17 +43,19 @@ static pthread_attr_t default_attr;
 
 static void pthread_reinit() {
 	int i;
+	thread_t *thread = &threads[pthread_self()];
 
 	LIST_INIT(&thread_free_list);
-	for (i = PTHREAD_THREADS_MAX - 1; i >= 1; i--) {
-		threads[i].env_id = 0;
-		LIST_INSERT_HEAD(&thread_free_list, &threads[i], link);
+	for (i = PTHREAD_THREADS_MAX - 1; i >= 0; i--) {
+		if (&threads[i] != thread) {
+			threads[i].env_id = 0;
+			LIST_INSERT_HEAD(&thread_free_list, &threads[i], link);
+		}
 	}
 
-	user_bzero(&threads[0], sizeof(thread_t));
-	threads[0].env_id = syscall_getenvid();
+	thread->env_id = syscall_getenvid();
 
-	if (sem_init(&threads[0].sem, 0, 0) ||
+	if (sem_init(&thread->sem, 0, 0) ||
 		sem_init(&global_mutex, 0, 1)) {
 		user_panic("pthread_reinit: could not create semaphores");
 	}
@@ -122,16 +124,10 @@ void _pthread_proc_exit() {
 }
 
 pthread_t pthread_self() {
-	pthread_t ret;
-	u_int env_id = syscall_getenvid();
+	u_int sp;
 
-	for (ret = 0; ret < PTHREAD_THREADS_MAX; ret++) {
-		if (threads[ret].env_id == env_id) {
-			return ret;
-		}
-	}
-
-	user_panic("pthread_self: thread not found");
+	asm ("move %0, $sp" : "=r" (sp));
+	return (UTOP - sp) / PDMAP;
 }
 
 int pthread_equal(pthread_t t1, pthread_t t2) {
