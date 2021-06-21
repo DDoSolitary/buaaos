@@ -33,6 +33,21 @@ static sem_entry_t sems[SEM_NSEMS_MAX];
 LIST_HEAD(sem_head, sem_entry);
 static struct sem_head sem_free_list;
 
+static void ipc_try_send(u_int whom, u_int val, u_int srcva, u_int perm)
+{
+	int r;
+
+	while ((r = syscall_ipc_can_send(whom, val, srcva, perm)) == -E_IPC_NOT_RECV) {
+		syscall_yield();
+	}
+
+	if (r == 0 || r == -E_BAD_ENV) {
+		return;
+	}
+
+	user_panic("error in ipc_send: %d", r);
+}
+
 static void sem_svr_init() {
 	int i;
 
@@ -95,7 +110,7 @@ static int sem_svr_post(sem_entry_t *sem) {
 	} else {
 		LIST_REMOVE(sem_wait, link);
 		LIST_INSERT_HEAD(&sem_wait_free_list, sem_wait, link);
-		ipc_send(sem_wait->env_id, 0, 0, 0);
+		ipc_try_send(sem_wait->env_id, 0, 0, 0);
 	}
 	return 0;
 }
