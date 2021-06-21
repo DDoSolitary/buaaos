@@ -88,10 +88,10 @@ void _pthread_init() {
 		user_panic("pthread_init: could not create semaphores");
 	}
 
-	pthread_attr_init(&default_attr);
-	pthread_key_create(&_pthread_handler_key, NULL);
-	pthread_setspecific(_pthread_handler_key, &main_head);
-	pthread_atfork(NULL, NULL, &pthread_reinit);
+	user_assert(!pthread_attr_init(&default_attr));
+	user_assert(!pthread_key_create(&_pthread_handler_key, NULL));
+	user_assert(!pthread_setspecific(_pthread_handler_key, &main_head));
+	user_assert(!pthread_atfork(NULL, NULL, &pthread_reinit));
 }
 
 void _pthread_proc_exit() {
