@@ -168,13 +168,13 @@ int pthread_key_create(pthread_key_t *key, void (*destructor)(void *)) {
 		return EAGAIN;
 	}
 	LIST_REMOVE(entry, link);
+	*key = (pthread_key_t)(entry - tls_entries);
 	entry->dtor = destructor;
 	for (i = 0; i < PTHREAD_THREADS_MAX; i++) {
 		threads[i].tls[*key] = NULL;
 	}
 	user_assert(!sem_post(&global_mutex));
 
-	*key = (pthread_key_t)(entry - tls_entries);
 	return 0;
 }
 
